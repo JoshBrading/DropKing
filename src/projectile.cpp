@@ -1,5 +1,5 @@
 #include "Projectile.h"
-#include "raymath.h"
+#include <raymath.h>
 
 projectile::projectile(const Vector3 start_pos, const Vector3 vel, const Model& model)
     : position_(start_pos), velocity_(vel), projectile_model_(model) {
@@ -20,7 +20,7 @@ void projectile::update() {
     Vector3 right = Vector3CrossProduct(up, direction);
     right = Vector3Normalize(right);
     up = Vector3CrossProduct(direction, right);
-
+    
     // I hate quaternions
     const Matrix rotation_matrix = {
         right.x, up.x, direction.x, 0.0f,

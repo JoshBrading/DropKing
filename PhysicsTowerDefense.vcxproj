@@ -19,13 +19,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\collision.cpp" />
+    <ClCompile Include="src\entity.cpp" />
     <ClCompile Include="src\f_mortar.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\projectile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\collision.h" />
     <ClInclude Include="include\enemy.h" />
+    <ClInclude Include="include\entity.h" />
     <ClInclude Include="include\friendly.h" />
+    <ClInclude Include="include\f_mortar.h" />
     <ClInclude Include="include\projectile.h" />
   </ItemGroup>
   <ItemGroup>
