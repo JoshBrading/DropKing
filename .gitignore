@@ -74,7 +74,6 @@ StyleCopReport.xml
 *_h.h
 *.ilk
 *.meta
-*.obj
 *.iobj
 *.pch
 *.pdb
@@ -301,9 +300,6 @@ node_modules/
 *.dsw
 *.dsp
 
-# Visual Studio 6 technical files
-*.ncb
-*.aps
 
 # Visual Studio LightSwitch build output
 **/*.HTMLClient/GeneratedArtifacts
@@ -404,11 +400,9 @@ FodyWeavers.xsd
 *.slo
 *.lo
 *.o
-*.obj
 
 # Precompiled Headers
 *.gch
-*.pch
 
 # Compiled Dynamic libraries
 *.so
@@ -429,3 +423,6 @@ FodyWeavers.xsd
 *.exe
 *.out
 *.app
+
+# Rider
+.idea
