@@ -1,12 +1,12 @@
 #include "f_mortar.h"
 
-f_mortar::f_mortar(const Vector3 position): entity(position, "assets/projectile.obj", "Mortar")
+FMortar::FMortar(const Vector3 position): Entity(position, "assets/projectile.obj", "Mortar")
 {
 }
 
-void f_mortar::update()
+void FMortar::update()
 {
-    entity::update();
+    Entity::update();
     DrawText("Mortar Update Function", 199, 299, 10, BLUE);
 }
 

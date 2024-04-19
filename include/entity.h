@@ -2,15 +2,15 @@
 #define ENTITY_H
 #include <raylib.h>
 
-class entity
+class Entity
 {
 public:
-    entity(const Vector3 position, const char* model_path, const char* name);
-    entity(entity&&) = delete; // Move constructor
-    entity(const entity&) = delete; // Copy constructor
-    entity& operator=(entity&&) = delete; // Move assignment operator
-    entity& operator=(const entity&) = delete; // Copy assignment operator
-    virtual ~entity(); // Destructor, needed for virtual function overrides?
+    Entity(const Vector3 position, const char* model_path, const char* name);
+    Entity(Entity&&) = delete; // Move constructor
+    Entity(const Entity&) = delete; // Copy constructor
+    Entity& operator=(Entity&&) = delete; // Move assignment operator
+    Entity& operator=(const Entity&) = delete; // Copy assignment operator
+    virtual ~Entity(); // Destructor, needed for virtual function overrides?
     
     virtual void update();
     virtual void update_fixed();

@@ -3,10 +3,10 @@
 
 #include "entity.h"
 
-class f_mortar final : public entity
+class FMortar final : public Entity
 {
 public:
-    explicit f_mortar(const Vector3 position);
+    explicit FMortar(const Vector3 position);
 
     virtual void update() override;
 };

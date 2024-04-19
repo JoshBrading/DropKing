@@ -3,9 +3,9 @@
 
 #include "raylib.h"
 
-class projectile {
+class Projectile {
 public:
-    projectile(Vector3 start_pos, Vector3 vel, const Model& model);
+    Projectile(Vector3 start_pos, Vector3 vel, const Model& model);
 
     void update();
     void draw() const;

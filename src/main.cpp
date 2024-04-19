@@ -21,7 +21,7 @@ int main(void)
     camera.projection = CAMERA_PERSPECTIVE;           // Camera projection type
 
     DisableCursor(); // Limit cursor to relative movement inside the window
-    f_mortar mortar({20,0,20});
+    FMortar mortar({20,0,20});
 
     constexpr float fixed_update_interval = 1.0f / 60.0f;
     float fixed_update_accumulator = 0.0f;

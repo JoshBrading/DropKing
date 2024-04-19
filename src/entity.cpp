@@ -1,8 +1,7 @@
 ﻿#include "entity.h"
-
 #include <raymath.h>
 
-entity::entity(const Vector3 position, const char* model_path, const char* name)
+Entity::Entity(const Vector3 position, const char* model_path, const char* name)
 {
     id_ = 0;
     tag_ = '0';
@@ -19,18 +18,18 @@ entity::entity(const Vector3 position, const char* model_path, const char* name)
 
 }
 
-entity::~entity() = default;
+Entity::~Entity() = default;
 
-void entity::update()
+void Entity::update()
 {
     DrawText(name_, static_cast<int>(position_.x), static_cast<int>(position_.y), 10, RED);
 }
 
-void entity::update_fixed()
+void Entity::update_fixed()
 {
     position_.x += 10;
 }
 
-void entity::draw() const
+void Entity::draw() const
 {
 }
