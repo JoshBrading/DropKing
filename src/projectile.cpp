@@ -2,8 +2,12 @@
 #include <raymath.h>
 
 Projectile::Projectile(const Vector3 start_pos, const Vector3 vel, const Model& model)
-    : position_(start_pos), velocity_(vel), projectile_model_(model) {
+{
+    position_ = start_pos;
+    velocity_ = vel;
+    projectile_model_ = model;
 }
+
 void Projectile::update() {
     // Set position
     velocity_.y -= 1.8f * GetFrameTime();

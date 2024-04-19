@@ -2,6 +2,33 @@
 #define ENTITY_H
 #include <raylib.h>
 
+enum EntityState
+{
+    GROUNDED,
+    IDLE,
+    WALKING,
+    RUNNING,
+    ATTACKING,
+    DYING
+};
+
+enum EntityTeam
+{
+    FRIENDLY,
+    NEUTRAL,
+    ENEMY
+};
+
+enum EntityTag
+{
+    WORLD,
+    OBJECT,
+    COLLECTIBLE,
+    PLAYER,
+    CHARACTER,
+    NONE
+};
+
 class Entity
 {
 public:
@@ -19,8 +46,11 @@ public:
 private:
 
     int id_;
-    char tag_;
     const char* name_;
+    
+    EntityTag tag_;
+    EntityTeam team_;
+    EntityState state_;
     
     bool visibility_;
     bool collision_;

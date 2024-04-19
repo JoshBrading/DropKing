@@ -4,9 +4,10 @@
 Entity::Entity(const Vector3 position, const char* model_path, const char* name)
 {
     id_ = 0;
-    tag_ = '0';
     name_ = name;
-    
+    tag_ = EntityTag::NONE;
+    team_ = EntityTeam::NEUTRAL;
+    state_ = EntityState::IDLE;
     model_ = LoadModel(model_path);
     
     position_ = position;
