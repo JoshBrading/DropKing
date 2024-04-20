@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="src\collision.cpp" />
     <ClCompile Include="src\entity.cpp" />
+    <ClCompile Include="src\entity_manager.cpp" />
     <ClCompile Include="src\f_mortar.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\projectile.cpp" />

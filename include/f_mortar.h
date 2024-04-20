@@ -7,7 +7,7 @@ class FMortar final : public Entity
 {
 public:
     explicit FMortar(const Vector3 position);
-
+    virtual void draw() override;
     virtual void update() override;
 };
 

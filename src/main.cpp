@@ -1,8 +1,12 @@
+#include <iomanip>
 #include <raylib.h>
 #include <raymath.h>
 #include "collision.h"
 #include "entity.h"
-#include "f_mortar.h"
+#include "entity_manager.h"
+#include <iostream>
+#include <sstream>
+#include <string>
 
 int main(void)
 {
@@ -21,8 +25,20 @@ int main(void)
     camera.projection = CAMERA_PERSPECTIVE;           // Camera projection type
 
     DisableCursor(); // Limit cursor to relative movement inside the window
-    FMortar mortar({20,0,20});
 
+
+    // Spawn an FMortar entity
+    EntityManager::instance()->spawn_entity(EntityType::MORTAR);
+    EntityManager::instance()->spawn_entity(EntityType::MORTAR);
+    Entity* mortar_entity = EntityManager::instance()->spawn_entity(EntityType::MORTAR);
+    EntityManager::instance()->remove_entity_from_manager(mortar_entity);
+    mortar_entity = EntityManager::instance()->spawn_entity(EntityType::MORTAR);
+    EntityManager::instance()->remove_entity_from_manager(mortar_entity);
+    mortar_entity = EntityManager::instance()->spawn_entity(EntityType::MORTAR);
+    EntityManager::instance()->remove_entity_from_manager(mortar_entity);
+    EntityManager::instance()->spawn_entity(EntityType::MORTAR);
+    EntityManager::instance()->spawn_entity(EntityType::MORTAR);
+    
     constexpr float fixed_update_interval = 1.0f / 60.0f;
     float fixed_update_accumulator = 0.0f;
     
@@ -32,7 +48,7 @@ int main(void)
         //-------------------------------------------------------------------------------------
         fixed_update_accumulator += GetFrameTime();
         
-        mortar.update();
+        EntityManager::instance()->update();
         
         Vector2 mouse_screen_pos = GetMousePosition();
 
@@ -44,27 +60,29 @@ int main(void)
         {
             mouse_world_pos = Vector3Add(ray.position, Vector3Scale(ray.direction, distance));
         }
+    
         //-------------------------------------------------------------------------------------
         
         // Run Fixed Updates
         //-------------------------------------------------------------------------------------
         while( fixed_update_accumulator >= fixed_update_interval )
         {
-            mortar.update_fixed();
+            //mortar_entity->update_fixed();
             fixed_update_accumulator -= fixed_update_interval;
         }
         //-------------------------------------------------------------------------------------
         
         // Draw
         //-------------------------------------------------------------------------------------
+       
         BeginDrawing();
         ClearBackground(BLACK);
         BeginMode3D(camera);
 
         // Draw Game Board
         bool is_gray = true;
-        int board_rows = 5;
-        int board_cols = 12;
+        const int board_rows = 5;
+        const int board_cols = 12;
         
         for( int i = 0; i < board_rows; i++ )
         {
@@ -73,7 +91,7 @@ int main(void)
             {
                 const Color color = is_gray? GRAY : DARKGRAY;
                 float x = static_cast<float>(j * 2 - board_cols + 1);
-                Vector3 position = {x, 0, y};
+                const Vector3 position = {x, 0, y};
                 DrawPlane(position, {2.0f, 2.0f}, color);
                 is_gray = !is_gray;
             }
@@ -82,9 +100,22 @@ int main(void)
 
         // Draw mouse position
         DrawSphere(mouse_world_pos, 0.1f, RED);
+        
+        
+        DrawText("entity->get_name()", 10, 10, 20, SKYBLUE);
         //-------------------------------------------------------------------------------------
 
+        EntityManager::instance()->draw();
         EndMode3D();
+        EntityManager::instance()->draw_debug(camera);
+        DrawFPS(20, 20);
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(2);
+        ss << "( X: " << mouse_world_pos.x << " Y: " << mouse_world_pos.y << " Z: " << mouse_world_pos.z << " )";
+        std::string text = ss.str();
+        int length = MeasureText(text.c_str(), 10);
+        DrawText(text.c_str(), static_cast<int>(mouse_screen_pos.x) - (length / 2), static_cast<int>(mouse_screen_pos.y) + 10, 10, WHITE );
+        
         EndDrawing();
     }
 
