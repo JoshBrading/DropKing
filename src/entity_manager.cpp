@@ -1,63 +1,66 @@
 ﻿#include "entity_manager.h"
+
+#include <format>
+
 #include "f_mortar.h"
 #include <iostream>
 #include <string>
 
 
-EntityManager* EntityManager::instance()
+EntityManager& EntityManager::instance()
 {
-    static EntityManager* instance = new EntityManager();
+    static auto instance = EntityManager();
     return instance;
 }
 
-void EntityManager::update() const
+void EntityManager::i_update() const
 {
-    for( const auto& id_entity_pair : entity_map_ )
+    for( const auto& [_, entity] : entity_map_ )
     {
-        Entity* entity = id_entity_pair.second;
         if( !entity ) continue;
         entity->update();
     }
 }
 
-void EntityManager::draw() const
+void EntityManager::i_draw() const
 {
     
-    for( const auto& id_entity_pair : entity_map_ )
+    for( const auto& [_, entity] : entity_map_ )
     {
-        Entity* entity = id_entity_pair.second;
         if( !entity ) continue;
             entity->draw();
     }
 }
 
-void EntityManager::draw_debug(const Camera& camera) const
+void EntityManager::i_draw_debug(const Camera& camera) const
 {
     int x = 100;
     int y = 100;
-    for( const auto& id_entity_pair : entity_map_ )
+    for( const auto& [id, entity] : entity_map_ )
     {
-        Entity* entity = id_entity_pair.second;
         if( !entity ) continue;
 
         entity->draw_debug(camera);
-        const int length = MeasureText(std::to_string(id_entity_pair.first).c_str(), 10);
-        DrawText( std::to_string(id_entity_pair.first).c_str(), x - length, y, 10, ORANGE );
-        DrawText( id_entity_pair.second->get_name(), x + 10, y, 10, GOLD );
-
-        y += 10;
+        int length = MeasureText(std::to_string(id).c_str(), 10);
+        DrawText( std::to_string(id).c_str(), x - length, y, 10, ORANGE );
+        DrawText( entity->get_name(), x + 10, y, 10, GOLD );
+        
+        const auto position = entity->get_position();
+        const std::string text = "( X: " + std::format("{:.2f}", position.x) + " Y: " + std::format("{:.2f}", position.y) + " Z: " + std::format("{:.2f}", position.z) + " )";
+        length = MeasureText(text.c_str(), 10);
+        DrawText(text.c_str(), x + 50, y, 10, GOLD );
+        
+        y += 15;
     }
 }
 
-Entity* EntityManager::spawn_entity(const EntityType type)
+Entity* EntityManager::i_spawn_entity(const EntityType type)
 {
     Entity* entity = nullptr;
     switch( type )
     {
-    case MORTAR:
+        case MORTAR:
             entity = new FMortar({0,0,0});
-            break;
-        case SOLDIER:
             break;
         default:
             return entity;
@@ -68,12 +71,12 @@ Entity* EntityManager::spawn_entity(const EntityType type)
     return entity;
 }
 
-void EntityManager::add_entity_to_manager( Entity* entity  )
+void EntityManager::i_add_entity_to_manager( Entity* entity  )
 {
     if( !entity ) return;
     
     // If ID in map increase ID
-    while( entity_map_.count(id_iterator_) > 0 )
+    while( entity_map_.contains(id_iterator_))
         id_iterator_++;
 
     // Set ID
@@ -90,7 +93,7 @@ void EntityManager::add_entity_to_manager( Entity* entity  )
     std::cout << "|----------------------------------------------------\n";
 }
 
-void EntityManager::remove_entity_from_manager(const Entity* entity  )
+void EntityManager::i_remove_entity_from_manager(const Entity* entity  )
 {
     if( !entity ) return;
     entity_map_.erase(entity->get_id());
@@ -99,24 +102,23 @@ void EntityManager::remove_entity_from_manager(const Entity* entity  )
     std::cout << "|----------------------------------------------------\n";
 }
 
-Entity* EntityManager::get_entity_by_id(const int id) const
+Entity* EntityManager::i_get_entity_by_id(const int id) const
 {
     Entity* entity = nullptr;
-    if( entity_map_.count(id) > 0 )
+    if( entity_map_.contains(id))
         entity = entity_map_.find(id)->second;
     return entity;
 }
 
-Entity* EntityManager::get_entity_by_tag(const EntityTag tag) const
+Entity* EntityManager::i_get_entity_by_tag(const EntityTag tag) const
 {
     Entity* entity = nullptr; 
-    for( const auto& id_entity_pair : entity_map_ )
+    for( const auto& [_, tmp_entity] : entity_map_ )
     {
-        Entity* tmp_ent = id_entity_pair.second;
-        if( !tmp_ent ) continue;
-        if( tmp_ent->get_tag() == tag )
+        if( !tmp_entity ) continue;
+        if( tmp_entity->get_tag() == tag )
         {
-            entity = tmp_ent;
+            entity = tmp_entity;
             break;
         }
     }

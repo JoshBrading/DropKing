@@ -1,11 +1,9 @@
-#include <iomanip>
+#include <format>
 #include <raylib.h>
 #include <raymath.h>
 #include "collision.h"
 #include "entity.h"
 #include "entity_manager.h"
-#include <iostream>
-#include <sstream>
 #include <string>
 
 int main(void)
@@ -28,16 +26,16 @@ int main(void)
 
 
     // Spawn an FMortar entity
-    EntityManager::instance()->spawn_entity(EntityType::MORTAR);
-    EntityManager::instance()->spawn_entity(EntityType::MORTAR);
-    Entity* mortar_entity = EntityManager::instance()->spawn_entity(EntityType::MORTAR);
-    EntityManager::instance()->remove_entity_from_manager(mortar_entity);
-    mortar_entity = EntityManager::instance()->spawn_entity(EntityType::MORTAR);
-    EntityManager::instance()->remove_entity_from_manager(mortar_entity);
-    mortar_entity = EntityManager::instance()->spawn_entity(EntityType::MORTAR);
-    EntityManager::instance()->remove_entity_from_manager(mortar_entity);
-    EntityManager::instance()->spawn_entity(EntityType::MORTAR);
-    EntityManager::instance()->spawn_entity(EntityType::MORTAR);
+    EntityManager::spawn_entity(EntityType::MORTAR);
+    EntityManager::spawn_entity(EntityType::MORTAR);
+    Entity* mortar_entity = EntityManager::spawn_entity(EntityType::MORTAR);
+    EntityManager::remove_entity_from_manager(mortar_entity);
+    mortar_entity = EntityManager::spawn_entity(EntityType::MORTAR);
+    EntityManager::remove_entity_from_manager(mortar_entity);
+    mortar_entity = EntityManager::spawn_entity(EntityType::MORTAR);
+    EntityManager::remove_entity_from_manager(mortar_entity);
+    EntityManager::spawn_entity(EntityType::MORTAR);
+    EntityManager::spawn_entity(EntityType::MORTAR);
     
     constexpr float fixed_update_interval = 1.0f / 60.0f;
     float fixed_update_accumulator = 0.0f;
@@ -48,7 +46,7 @@ int main(void)
         //-------------------------------------------------------------------------------------
         fixed_update_accumulator += GetFrameTime();
         
-        EntityManager::instance()->update();
+        EntityManager::update();
         
         Vector2 mouse_screen_pos = GetMousePosition();
 
@@ -100,21 +98,16 @@ int main(void)
 
         // Draw mouse position
         DrawSphere(mouse_world_pos, 0.1f, RED);
-        
-        
-        DrawText("entity->get_name()", 10, 10, 20, SKYBLUE);
         //-------------------------------------------------------------------------------------
 
-        EntityManager::instance()->draw();
+        EntityManager::draw();
         EndMode3D();
-        EntityManager::instance()->draw_debug(camera);
+        EntityManager::draw_debug(camera);
         DrawFPS(20, 20);
-        std::stringstream ss;
-        ss << std::fixed << std::setprecision(2);
-        ss << "( X: " << mouse_world_pos.x << " Y: " << mouse_world_pos.y << " Z: " << mouse_world_pos.z << " )";
-        std::string text = ss.str();
-        int length = MeasureText(text.c_str(), 10);
-        DrawText(text.c_str(), static_cast<int>(mouse_screen_pos.x) - (length / 2), static_cast<int>(mouse_screen_pos.y) + 10, 10, WHITE );
+        
+        const std::string position = "( X: " + std::format("{:.2f}", mouse_world_pos.x) + " Y: " + std::format("{:.2f}", mouse_world_pos.y) + " Z: " + std::format("{:.2f}", mouse_world_pos.z) + " )";
+        const int length = MeasureText(position.c_str(), 10);
+        DrawText(position.c_str(), static_cast<int>(mouse_screen_pos.x) - (length / 2), static_cast<int>(mouse_screen_pos.y) + 10, 10, WHITE );
         
         EndDrawing();
     }

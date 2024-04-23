@@ -53,28 +53,37 @@ public:
 
     int get_id() const;
     const char* get_name() const;
+    
     EntityTag get_tag() const;
-    EntityTeam get_team() const;
-
     void set_tag(EntityTag tag);
+    
+    EntityTeam get_team() const;
     void set_team(EntityTeam team);
+
+    Vector3 get_position() const;
+    
+    Vector3 get_target_position() const;
+    void set_target_position( Vector3 target_position );
     
 private:
-    int id_;
-    const char* name_;
+    int id;
+    const char* name;
     
-    EntityTag tag_;
-    EntityTeam team_;
-    EntityState state_;
+    EntityTag tag;
+    EntityTeam team;
+    EntityState state;
     
-    bool visibility_;
-    bool collision_;
+    bool visibility;
+    bool collision;
 
-    Model model_;
+    Model model;
 
-    Vector3 position_;
-    Vector3 rotation_;
-    Vector3 scale_;
+    Vector3 target_position;
+
+protected:
+    Vector3 position;
+    Vector3 rotation;
+    Vector3 scale;
     
     void set_id(int id);
 };

@@ -5,15 +5,15 @@
 
 class Projectile {
 public:
-    Projectile(Vector3 start_pos, Vector3 vel, const Model& model);
+    Projectile(Vector3 start_position, Vector3 velocity, const Model& model);
 
     void update();
     void draw() const;
 
 private:
-    Vector3 position_;
-    Vector3 velocity_;
-    Model projectile_model_;
+    Vector3 position;
+    Vector3 velocity;
+    Model projectile_model;
 };
 
 #endif // PROJECTILE_H

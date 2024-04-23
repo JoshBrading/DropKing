@@ -33,7 +33,9 @@
     <ClInclude Include="include\entity_manager.h" />
     <ClInclude Include="include\friendly.h" />
     <ClInclude Include="include\f_mortar.h" />
+    <ClInclude Include="include\menu.h" />
     <ClInclude Include="include\projectile.h" />
+    <ClInclude Include="include\weapon.h" />
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
@@ -125,6 +127,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\maste\OneDrive\Desktop\Code\Games\PhysicsTowerDefense\include;C:\Users\maste\OneDrive\Desktop\Code\Games\raylib\out\build\x64-Debug\raylib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -141,6 +144,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

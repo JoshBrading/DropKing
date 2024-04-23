@@ -1,22 +1,22 @@
 #include "Projectile.h"
 #include <raymath.h>
 
-Projectile::Projectile(const Vector3 start_pos, const Vector3 vel, const Model& model)
+Projectile::Projectile(const Vector3 start_position, const Vector3 velocity, const Model& model)
 {
-    position_ = start_pos;
-    velocity_ = vel;
-    projectile_model_ = model;
+    this->position = start_position;
+    this->velocity = velocity;
+    this->projectile_model = model;
 }
 
 void Projectile::update() {
     // Set position
-    velocity_.y -= 1.8f * GetFrameTime();
-    position_.x += velocity_.x * GetFrameTime();
-    position_.y += velocity_.y * GetFrameTime();
-    position_.z += velocity_.z * GetFrameTime();
+    velocity.y -= 1.8f * GetFrameTime();
+    position.x += velocity.x * GetFrameTime();
+    position.y += velocity.y * GetFrameTime();
+    position.z += velocity.z * GetFrameTime();
 
     // Set rotation
-    const Vector3 direction = Vector3Normalize(velocity_);
+    const Vector3 direction = Vector3Normalize(velocity);
     Vector3 up = {0.0f, 1.0f, 0.0f};
 
     // Needs more research..
@@ -32,10 +32,10 @@ void Projectile::update() {
         0.0f,    0.0f, 0.0f,        1.0f
     };
 
-    projectile_model_.transform = MatrixMultiply(rotation_matrix, MatrixTranslate(0,0,0));
+    projectile_model.transform = MatrixMultiply(rotation_matrix, MatrixTranslate(0,0,0));
 }
 
 void Projectile::draw() const
 {
-    DrawModel(projectile_model_, position_, 1.0f, WHITE);
+    DrawModel(projectile_model, position, 1.0f, WHITE);
 }
