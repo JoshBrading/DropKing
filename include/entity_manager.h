@@ -12,11 +12,13 @@ public:
     static void update() { instance().i_update();}
     static void draw() { instance().i_draw();}
     static void draw_debug(const Camera& camera) { instance().i_draw_debug(camera);}
-    static Entity* spawn_entity(const EntityType type) { return instance().i_spawn_entity(type);}
+    static Entity* spawn_entity(const EntityType type) { return i_spawn_entity(type);}
     static void add_entity_to_manager(Entity* entity) { instance().i_add_entity_to_manager(entity);}
-    static void remove_entity_from_manager(Entity* entity) { instance().i_remove_entity_from_manager(entity);}
+    static void remove_entity_from_manager(const Entity* entity) { instance().i_remove_entity_from_manager(entity);}
     static Entity* get_entity_by_id(const int id) { return instance().i_get_entity_by_id(id);}
     static Entity* get_entity_by_tag(const EntityTag tag) { return instance().i_get_entity_by_tag(tag);}
+    static void free(){ instance().i_free(); }
+
 private:
     EntityManager() : id_iterator_(0) {}
     
@@ -24,13 +26,15 @@ private:
     void i_draw() const;
     void i_draw_debug(const Camera& camera) const;
 
-    Entity* i_spawn_entity( const EntityType type );
+    static Entity* i_spawn_entity( const EntityType type );
     
     void i_add_entity_to_manager(Entity* entity);
     void i_remove_entity_from_manager(const Entity* entity);
 
     Entity* i_get_entity_by_id(int id) const;
     Entity* i_get_entity_by_tag( EntityTag tag) const;
+
+    void i_free();
     
     //       id_   ptr
     std::map<int, Entity*> entity_map_;

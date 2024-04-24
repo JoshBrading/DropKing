@@ -1,9 +1,7 @@
-﻿#include "entity.h"
-
-#include <format>
-#include <raymath.h>
+﻿#include <format>
 #include <string>
-
+#include "entity.h"
+#include <raymath.h>
 #include "entity_manager.h"
 
 Entity::Entity(const Vector3 position, const char* model_path, const char* name)
@@ -16,6 +14,7 @@ Entity::Entity(const Vector3 position, const char* model_path, const char* name)
     this->model = LoadModel(model_path);
     
     this->position = position;
+    this->target_position = position;
     this->rotation = Vector3Zero();
     this->scale = Vector3One();
     

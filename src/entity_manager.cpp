@@ -1,11 +1,12 @@
-﻿#include "entity_manager.h"
-
-#include <format>
-
-#include "f_mortar.h"
+﻿#include <format>
 #include <iostream>
 #include <string>
 
+#include "entity_manager.h"
+
+#include <ranges>
+
+#include "f_mortar.h"
 
 EntityManager& EntityManager::instance()
 {
@@ -15,7 +16,7 @@ EntityManager& EntityManager::instance()
 
 void EntityManager::i_update() const
 {
-    for( const auto& [_, entity] : entity_map_ )
+    for(const auto& entity : entity_map_ | std::views::values)
     {
         if( !entity ) continue;
         entity->update();
@@ -25,7 +26,7 @@ void EntityManager::i_update() const
 void EntityManager::i_draw() const
 {
     
-    for( const auto& [_, entity] : entity_map_ )
+    for(const auto& entity : entity_map_ | std::views::values)
     {
         if( !entity ) continue;
             entity->draw();
@@ -34,28 +35,29 @@ void EntityManager::i_draw() const
 
 void EntityManager::i_draw_debug(const Camera& camera) const
 {
-    int x = 100;
-    int y = 100;
+    int y_offset = 100;
     for( const auto& [id, entity] : entity_map_ )
     {
+        constexpr int x_offset = 100;
         if( !entity ) continue;
 
         entity->draw_debug(camera);
-        int length = MeasureText(std::to_string(id).c_str(), 10);
-        DrawText( std::to_string(id).c_str(), x - length, y, 10, ORANGE );
-        DrawText( entity->get_name(), x + 10, y, 10, GOLD );
+        const int length = MeasureText(std::to_string(id).c_str(), 10);
+        DrawText( std::to_string(id).c_str(), x_offset - length, y_offset, 10, ORANGE );
+        DrawText( entity->get_name(), x_offset + 10, y_offset, 10, GOLD );
         
-        const auto position = entity->get_position();
-        const std::string text = "( X: " + std::format("{:.2f}", position.x) + " Y: " + std::format("{:.2f}", position.y) + " Z: " + std::format("{:.2f}", position.z) + " )";
-        length = MeasureText(text.c_str(), 10);
-        DrawText(text.c_str(), x + 50, y, 10, GOLD );
+        const auto [x, y, z] = entity->get_position();
+        const std::string text = "( X: " + std::format("{:.2f}", x) + " Y: " + std::format("{:.2f}", y) + " Z: " + std::format("{:.2f}", z) + " )";
+        DrawText(text.c_str(), x_offset + 50, y_offset, 10, GOLD );
         
-        y += 15;
+        y_offset += 15;
     }
 }
 
 Entity* EntityManager::i_spawn_entity(const EntityType type)
 {
+    std::cout << "Entity Manager: Spawning entity of type: " << type << ".\n";
+
     Entity* entity = nullptr;
     switch( type )
     {
@@ -67,14 +69,15 @@ Entity* EntityManager::i_spawn_entity(const EntityType type)
     }
 
     add_entity_to_manager(entity);
-    
+    std::cout << "Entity Manager: Entity spawned.\n";
+
     return entity;
 }
 
 void EntityManager::i_add_entity_to_manager( Entity* entity  )
 {
     if( !entity ) return;
-    
+    std::cout << "Entity Manager: Adding entity with name: " << entity->get_name() << " to entity map.\n";
     // If ID in map increase ID
     while( entity_map_.contains(id_iterator_))
         id_iterator_++;
@@ -88,18 +91,17 @@ void EntityManager::i_add_entity_to_manager( Entity* entity  )
     
     id_iterator_++;
     
-    std::cout << "|----------------------------------------------------\n";
-    std::cout << "| Entity Manager: Entity with ID: " << id << " added.\n";
-    std::cout << "|----------------------------------------------------\n";
+    std::cout << "Entity Manager: Entity with ID: " << entity->get_id() << " added to entity map.\n";
+
 }
 
 void EntityManager::i_remove_entity_from_manager(const Entity* entity  )
 {
     if( !entity ) return;
+    std::cout << "Entity Manager: Removing entity with ID: " << entity->get_id() << ".\n";
     entity_map_.erase(entity->get_id());
-    std::cout << "|----------------------------------------------------\n";
-    std::cout << "| Entity Manager: Entity with ID: " << entity->get_id() << " removed.\n";
-    std::cout << "|----------------------------------------------------\n";
+    delete(entity);
+    std::cout << "Entity Manager: Entity removed.\n";
 }
 
 Entity* EntityManager::i_get_entity_by_id(const int id) const
@@ -113,7 +115,7 @@ Entity* EntityManager::i_get_entity_by_id(const int id) const
 Entity* EntityManager::i_get_entity_by_tag(const EntityTag tag) const
 {
     Entity* entity = nullptr; 
-    for( const auto& [_, tmp_entity] : entity_map_ )
+    for(const auto& tmp_entity : entity_map_ | std::views::values)
     {
         if( !tmp_entity ) continue;
         if( tmp_entity->get_tag() == tag )
@@ -123,4 +125,18 @@ Entity* EntityManager::i_get_entity_by_tag(const EntityTag tag) const
         }
     }
     return entity;
+}
+
+void EntityManager::i_free()
+{
+    std::cout << "Entity Manager: Freeing Entity Memory.\n";
+    for(const auto& entity : entity_map_ | std::views::values)
+    {
+        if( !entity ) continue;
+        delete entity;
+    }
+    std::cout << "Entity Manager: Done.\n";
+    std::cout << "Entity Manager: Freeing Entity Map.\n";
+    entity_map_.clear();
+    std::cout << "Entity Manager: Done.\n";
 }

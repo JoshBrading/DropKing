@@ -1,8 +1,5 @@
 #include "f_mortar.h"
-
-#include <cstdlib>
 #include <raymath.h>
-
 #include "Projectile.h"
 
 FMortar::FMortar(const Vector3 position): Entity(position, "assets/projectile.obj", "Mortar")
@@ -22,7 +19,7 @@ void FMortar::update()
     if (NEW_TARGET_TIMER <= GetTime())
     {
         // Set new random target position and reset timer
-        const auto test = Vector3(GetRandomValue(-10, 10), GetRandomValue(0, 10), GetRandomValue(-10, 20) );
+        const Vector3 test = {static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(0, 10)), static_cast<float>(GetRandomValue(-10, 20))};
         set_target_position(test); // Change range as needed
         NEW_TARGET_TIMER = static_cast<int>(GetTime()) + 200; // Reset timer to 10 seconds (assuming 60 frames per second)
         

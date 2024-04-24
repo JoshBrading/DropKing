@@ -19,7 +19,7 @@ void Projectile::update() {
     const Vector3 direction = Vector3Normalize(velocity);
     Vector3 up = {0.0f, 1.0f, 0.0f};
 
-    // Needs more research..
+    // Needs more research...
     up = Vector3Normalize(Vector3Subtract(up, Vector3Scale(direction, Vector3DotProduct(up, direction))));
     Vector3 right = Vector3CrossProduct(up, direction);
     right = Vector3Normalize(right);

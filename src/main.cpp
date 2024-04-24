@@ -1,10 +1,37 @@
 #include <format>
+#include <iostream>
 #include <raylib.h>
 #include <raymath.h>
 #include "collision.h"
 #include "entity.h"
 #include "entity_manager.h"
-#include <string>
+
+struct MemoryAllocation
+{
+    int total_allocated = 0;
+    int total_free = 0;
+    void print_usage() const
+    {
+        std::cout << "Memory Used: " << total_allocated - total_free << " bytes.\n";
+    }
+};
+
+MemoryAllocation MEMORY_ALLOCATION;
+
+// ReSharper disable CppParameterNamesMismatch
+void* operator new(const size_t size)  // NOLINT(misc-new-delete-overloads)
+{
+    MEMORY_ALLOCATION.total_allocated += static_cast<int>(size);
+    return malloc(size);
+}
+
+void operator delete(void* memory, const size_t size)  // NOLINT(misc-new-delete-overloads, clang-diagnostic-implicit-exception-spec-mismatch)
+{
+    MEMORY_ALLOCATION.total_free += static_cast<int>(size);
+    free(memory);
+}
+// ReSharper restore CppParameterNamesMismatch
+
 
 int main(void)
 {
@@ -15,7 +42,7 @@ int main(void)
     InitWindow(screen_width, screen_height, "Humans Vs Automatons - [raylib]");
 
     // 3D Camera
-    Camera3D camera = {0};
+    Camera3D camera;
     camera.position = Vector3{ 0.0f, 20.0f, 20.0f }; // Camera position
     camera.target = Vector3{ 0.0f, 0.0f, 0.0f };      // Camera looking at point
     camera.up = Vector3{ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
@@ -24,11 +51,10 @@ int main(void)
 
     DisableCursor(); // Limit cursor to relative movement inside the window
 
-
-    // Spawn an FMortar entity
+   //  Spawn an FMortar entity
     EntityManager::spawn_entity(EntityType::MORTAR);
     EntityManager::spawn_entity(EntityType::MORTAR);
-    Entity* mortar_entity = EntityManager::spawn_entity(EntityType::MORTAR);
+    const Entity* mortar_entity = EntityManager::spawn_entity(EntityType::MORTAR);
     EntityManager::remove_entity_from_manager(mortar_entity);
     mortar_entity = EntityManager::spawn_entity(EntityType::MORTAR);
     EntityManager::remove_entity_from_manager(mortar_entity);
@@ -36,16 +62,16 @@ int main(void)
     EntityManager::remove_entity_from_manager(mortar_entity);
     EntityManager::spawn_entity(EntityType::MORTAR);
     EntityManager::spawn_entity(EntityType::MORTAR);
-    
     constexpr float fixed_update_interval = 1.0f / 60.0f;
     float fixed_update_accumulator = 0.0f;
     
     while (!WindowShouldClose()) // Main game loop
     {
+
         // Update
         //-------------------------------------------------------------------------------------
         fixed_update_accumulator += GetFrameTime();
-        
+
         EntityManager::update();
         
         Vector2 mouse_screen_pos = GetMousePosition();
@@ -58,7 +84,7 @@ int main(void)
         {
             mouse_world_pos = Vector3Add(ray.position, Vector3Scale(ray.direction, distance));
         }
-    
+
         //-------------------------------------------------------------------------------------
         
         // Run Fixed Updates
@@ -72,18 +98,18 @@ int main(void)
         
         // Draw
         //-------------------------------------------------------------------------------------
-       
+
         BeginDrawing();
         ClearBackground(BLACK);
         BeginMode3D(camera);
 
         // Draw Game Board
         bool is_gray = true;
-        const int board_rows = 5;
-        const int board_cols = 12;
-        
+        constexpr int board_rows = 5;
+
         for( int i = 0; i < board_rows; i++ )
         {
+            constexpr int board_cols = 12;
             float y = static_cast<float>(i * 2 - board_rows + 1);
             for( int j = 0; j < board_cols; j++)
             {
@@ -105,14 +131,16 @@ int main(void)
         EntityManager::draw_debug(camera);
         DrawFPS(20, 20);
         
-        const std::string position = "( X: " + std::format("{:.2f}", mouse_world_pos.x) + " Y: " + std::format("{:.2f}", mouse_world_pos.y) + " Z: " + std::format("{:.2f}", mouse_world_pos.z) + " )";
-        const int length = MeasureText(position.c_str(), 10);
-        DrawText(position.c_str(), static_cast<int>(mouse_screen_pos.x) - (length / 2), static_cast<int>(mouse_screen_pos.y) + 10, 10, WHITE );
+        //const std::string position = "( X: " + std::format("{:.2f}", mouse_world_pos.x) + " Y: " + std::format("{:.2f}", mouse_world_pos.y) + " Z: " + std::format("{:.2f}", mouse_world_pos.z) + " )";
+        //const int length = MeasureText(position.c_str(), 10);
+        //DrawText(position.c_str(), static_cast<int>(mouse_screen_pos.x) - (length / 2), static_cast<int>(mouse_screen_pos.y) + 10, 10, WHITE );
         
         EndDrawing();
     }
-
+    
+    EntityManager::free();
     CloseWindow(); // De-Initialization
+    MEMORY_ALLOCATION.print_usage();
 
     return 0;
 }
