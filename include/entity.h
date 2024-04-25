@@ -76,7 +76,6 @@ private:
     bool visibility;
     bool collision;
 
-    Model model;
 
     Vector3 target_position;
 
@@ -84,6 +83,7 @@ protected:
     Vector3 position;
     Vector3 rotation;
     Vector3 scale;
+    Model model;
     
     void set_id(int id);
 };

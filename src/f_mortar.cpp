@@ -1,4 +1,6 @@
 #include "f_mortar.h"
+
+#include <iostream>
 #include <raymath.h>
 #include "Projectile.h"
 
@@ -16,6 +18,11 @@ int NEW_TARGET_TIMER = 0;
 float TOLERANCE = 0.02f;
 void FMortar::update()
 {
+    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
+        const Model proj_model = model;
+        auto projectile = new Projectile(position, {10, 30, 0}, proj_model);
+    }
     if (NEW_TARGET_TIMER <= GetTime())
     {
         // Set new random target position and reset timer

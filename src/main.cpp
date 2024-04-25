@@ -1,37 +1,12 @@
 #include <format>
-#include <iostream>
 #include <raylib.h>
 #include <raymath.h>
 #include "collision.h"
 #include "entity.h"
 #include "entity_manager.h"
+#include "mem.h"
 
-struct MemoryAllocation
-{
-    int total_allocated = 0;
-    int total_free = 0;
-    void print_usage() const
-    {
-        std::cout << "Memory Used: " << total_allocated - total_free << " bytes.\n";
-    }
-};
-
-MemoryAllocation MEMORY_ALLOCATION;
-
-// ReSharper disable CppParameterNamesMismatch
-void* operator new(const size_t size)  // NOLINT(misc-new-delete-overloads)
-{
-    MEMORY_ALLOCATION.total_allocated += static_cast<int>(size);
-    return malloc(size);
-}
-
-void operator delete(void* memory, const size_t size)  // NOLINT(misc-new-delete-overloads, clang-diagnostic-implicit-exception-spec-mismatch)
-{
-    MEMORY_ALLOCATION.total_free += static_cast<int>(size);
-    free(memory);
-}
-// ReSharper restore CppParameterNamesMismatch
-
+bool DEBUG = false;
 
 int main(void)
 {
@@ -65,6 +40,7 @@ int main(void)
     constexpr float fixed_update_interval = 1.0f / 60.0f;
     float fixed_update_accumulator = 0.0f;
     
+    MemoryManager::get_usage();
     while (!WindowShouldClose()) // Main game loop
     {
 
@@ -74,15 +50,15 @@ int main(void)
 
         EntityManager::update();
         
-        Vector2 mouse_screen_pos = GetMousePosition();
+        Vector2 mouse_screen_position = GetMousePosition();
 
         // Convert screen coordinates to world coordinates
-        Ray ray = GetMouseRay(mouse_screen_pos, camera);
-        Vector3 mouse_world_pos = Vector3Zero();
+        Ray ray = GetMouseRay(mouse_screen_position, camera);
+        Vector3 mouse_world_position = Vector3Zero();
         float distance = 0;
         if (ray_intersects_plane(ray, Vector3{0, 0, 0}, Vector3{0, 1, 0}, &distance))
         {
-            mouse_world_pos = Vector3Add(ray.position, Vector3Scale(ray.direction, distance));
+            mouse_world_position = Vector3Add(ray.position, Vector3Scale(ray.direction, distance));
         }
 
         //-------------------------------------------------------------------------------------
@@ -123,24 +99,34 @@ int main(void)
         }
 
         // Draw mouse position
-        DrawSphere(mouse_world_pos, 0.1f, RED);
+        DrawSphere(mouse_world_position, 0.1f, RED);
         //-------------------------------------------------------------------------------------
 
         EntityManager::draw();
         EndMode3D();
-        EntityManager::draw_debug(camera);
+        if( IsKeyPressed(KEY_F1))
+        {
+            DEBUG = !DEBUG;
+        }
+        if( DEBUG )
+        {
+            EntityManager::draw_debug(camera);
+            int usage = MemoryManager::get_usage();
+            const std::string memory_usage = std::format("Memory Usage: {}/Bytes", usage);
+            DrawText(memory_usage.c_str(), 10, GetScreenHeight() - 20, 10, WHITE);
+        }
         DrawFPS(20, 20);
         
-        //const std::string position = "( X: " + std::format("{:.2f}", mouse_world_pos.x) + " Y: " + std::format("{:.2f}", mouse_world_pos.y) + " Z: " + std::format("{:.2f}", mouse_world_pos.z) + " )";
+        //const std::string position = "( X: " + std::format("{:.2f}", mouse_world_position.x) + " Y: " + std::format("{:.2f}", mouse_world_position.y) + " Z: " + std::format("{:.2f}", mouse_world_position.z) + " )";
         //const int length = MeasureText(position.c_str(), 10);
-        //DrawText(position.c_str(), static_cast<int>(mouse_screen_pos.x) - (length / 2), static_cast<int>(mouse_screen_pos.y) + 10, 10, WHITE );
+        //DrawText(position.c_str(), static_cast<int>(mouse_screen_position.x) - (length / 2), static_cast<int>(mouse_screen_position.y) + 10, 10, WHITE );
         
         EndDrawing();
     }
     
     EntityManager::free();
     CloseWindow(); // De-Initialization
-    MEMORY_ALLOCATION.print_usage();
+    MemoryManager::get_usage();
 
     return 0;
 }
