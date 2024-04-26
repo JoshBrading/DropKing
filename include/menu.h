@@ -9,19 +9,20 @@ class Menu;
 struct MenuText
 {
     std::string     text;
-    Font*           font;
+    Font            font;
+    int             size;
     Vector2         position;
 };
 
 struct MenuImage
 {
-    Image       *image;
+    Texture2D   image;
     Vector2     position;
 };
 
 struct MenuSelector
 {
-    MenuImage   icon;
+    Texture2D   icon;
     Vector2     position;
     Vector2     target_position;
 };
@@ -45,13 +46,19 @@ struct MenuButton
     Vector2     position;
     Vector2     icon_offset;
 
-    Image       background;
-    Image       background_selected;
+    Texture2D   background;
+    Texture2D   background_selected;
     
     void        (*action)(Menu* self, void* data);
     void        *data;
     int         height;
     int         width;
+};
+
+struct MenuButtonContext
+{
+    MenuButton *button;
+    int         index;
 };
 
 struct MenuDropdown
@@ -75,25 +82,32 @@ public:
     ~Menu();
 
 
-    void add_label(const std::string& text, Font* font, const Vector2& position);
-    void add_image(Image* image, const Vector2& position);
-    void add_button(const std::string& label_text, Font* font, const Vector2& position, int width, int height, void (*action)(Menu* self, void* data), void* data = nullptr);
+    void add_label(const std::string& text, const Font& font, const int size, const Vector2 position);
+    void add_image(Image* image, const Vector2 position);
+    void add_button(const std::string& label_text, const Font& font, const Vector2 position, int width, int height, void (*action)(Menu* self, void* data), void* data = nullptr);
     void add_dropdown(const std::string& label_text, Font* font, const Vector2& position, Image* underlay);
-    
-    void draw();
+    void toggle();
+
+    void update();
+    void update_fixed();
+    void draw() const;
     void set_background(Image* bg);
     Menu* get_previous_menu() const;
     
 private:
-    std::vector<MenuText>       *labels;
-    std::vector<MenuImage>      *images;
-    std::vector<MenuButton>     *buttons;
-    std::vector<MenuDropdown>   *dropdowns;
+    bool is_open = false;
+    std::vector<MenuText>       labels;
+    std::vector<MenuImage>      images;
+    std::vector<MenuButton*>     buttons;
+    std::vector<MenuDropdown>   dropdowns;
 
-    MenuButton  *current_button;
-    Menu        *previous_menu; // Points to the previous menu for "go back", null if root
-
-    Image   background;
+    MenuSelector        selector;
+    MenuButtonContext   current_button_context;
+    Menu                *previous_menu; // Points to the previous menu for "go back", null if root
+    
+    double move_cooldown = 200; // Cooldown in ms
+    
+    Image   *background;
 
 };
 

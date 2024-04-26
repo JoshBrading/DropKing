@@ -5,8 +5,14 @@
 #include "entity.h"
 #include "entity_manager.h"
 #include "mem.h"
+#include "menu.h"
 
 bool DEBUG = false;
+bool should_close = false;
+void close_game(Menu *menu, void* data)
+{
+    should_close = true;
+}
 
 int main(void)
 {
@@ -15,7 +21,7 @@ int main(void)
     constexpr int screen_width = 1280;
     constexpr int screen_height = 720;
     InitWindow(screen_width, screen_height, "Humans Vs Automatons - [raylib]");
-
+    SetExitKey(KEY_NULL);
     // 3D Camera
     Camera3D camera;
     camera.position = Vector3{ 0.0f, 20.0f, 20.0f }; // Camera position
@@ -24,7 +30,7 @@ int main(void)
     camera.fovy = 45.0f;                              // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;           // Camera projection type
 
-    DisableCursor(); // Limit cursor to relative movement inside the window
+    //DisableCursor(); // Limit cursor to relative movement inside the window
 
    //  Spawn an FMortar entity
     EntityManager::spawn_entity(EntityType::MORTAR);
@@ -39,9 +45,19 @@ int main(void)
     EntityManager::spawn_entity(EntityType::MORTAR);
     constexpr float fixed_update_interval = 1.0f / 60.0f;
     float fixed_update_accumulator = 0.0f;
-    
+
+    Menu menu;
+    menu.add_label("Menu Title", GetFontDefault(), 48, {100, 100});
+    menu.add_label("Menu Description", GetFontDefault(), 16, {100, 150});
+    menu.add_button("button 1",GetFontDefault(), {100, 200}, 100, 10, nullptr, nullptr);
+    menu.add_button("button 2",GetFontDefault(), {100, 230}, 100, 10, nullptr, nullptr);
+    menu.add_button("button 3",GetFontDefault(), {100, 260}, 100, 10, nullptr, nullptr);
+    menu.add_button("button 4",GetFontDefault(), {100, 290}, 100, 10, nullptr, nullptr);
+    menu.add_button("button 5",GetFontDefault(), {100, 320}, 100, 10, nullptr, nullptr);
+    menu.add_button("button 6",GetFontDefault(), {100, 350}, 100, 10, nullptr, nullptr);
+    menu.add_button("Quit",GetFontDefault(), {100, GetScreenHeight() - 50.0f}, 100, 10, close_game, nullptr);
     MemoryManager::get_usage();
-    while (!WindowShouldClose()) // Main game loop
+    while (!should_close) // Main game loop
     {
 
         // Update
@@ -60,13 +76,14 @@ int main(void)
         {
             mouse_world_position = Vector3Add(ray.position, Vector3Scale(ray.direction, distance));
         }
-
+        menu.update();
         //-------------------------------------------------------------------------------------
         
         // Run Fixed Updates
         //-------------------------------------------------------------------------------------
         while( fixed_update_accumulator >= fixed_update_interval )
         {
+            menu.update_fixed();
             //mortar_entity->update_fixed();
             fixed_update_accumulator -= fixed_update_interval;
         }
@@ -76,7 +93,7 @@ int main(void)
         //-------------------------------------------------------------------------------------
 
         BeginDrawing();
-        ClearBackground(BLACK);
+        ClearBackground(DARKGRAY);
         BeginMode3D(camera);
 
         // Draw Game Board
@@ -89,7 +106,7 @@ int main(void)
             float y = static_cast<float>(i * 2 - board_rows + 1);
             for( int j = 0; j < board_cols; j++)
             {
-                const Color color = is_gray? GRAY : DARKGRAY;
+                const Color color = is_gray? GRAY : BLACK;
                 float x = static_cast<float>(j * 2 - board_cols + 1);
                 const Vector3 position = {x, 0, y};
                 DrawPlane(position, {2.0f, 2.0f}, color);
@@ -116,7 +133,7 @@ int main(void)
             DrawText(memory_usage.c_str(), 10, GetScreenHeight() - 20, 10, WHITE);
         }
         DrawFPS(20, 20);
-        
+        menu.draw();
         //const std::string position = "( X: " + std::format("{:.2f}", mouse_world_position.x) + " Y: " + std::format("{:.2f}", mouse_world_position.y) + " Z: " + std::format("{:.2f}", mouse_world_position.z) + " )";
         //const int length = MeasureText(position.c_str(), 10);
         //DrawText(position.c_str(), static_cast<int>(mouse_screen_position.x) - (length / 2), static_cast<int>(mouse_screen_position.y) + 10, 10, WHITE );

@@ -30,7 +30,7 @@ private:
     
     int i_get_usage() const
     {
-        std::cout << "Memory Used: " << total_allocated - total_free << " bytes.\n";
+        //std::cout << "Memory Used: " << total_allocated - total_free << " bytes.\n";
         return total_allocated - total_free;
     }
 };
