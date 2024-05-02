@@ -12,6 +12,7 @@
 
 bool DEBUG = false;
 bool SHOULD_CLOSE = false;
+bool PAUSE = false;
 
 int main(void)
 {
@@ -86,10 +87,11 @@ int main(void)
     menu.add_button("button 5",GetFontDefault(), {100, 320}, 100, 10, nullptr, nullptr);
     menu.add_button("button 6",GetFontDefault(), {100, 350}, 100, 10, nullptr, nullptr);
     menu.add_button("Quit",GetFontDefault(), {100, static_cast<float>(GetScreenHeight()) - 50.0f}, 100, 10, [](Menu*, void*){SHOULD_CLOSE = !SHOULD_CLOSE;}, nullptr);
-    
+
     Menu store;
     store.add_button("Toggle Debug", GetFontDefault(), {50, 50}, 100, 10, [](Menu*, void*){DEBUG = !DEBUG;}, nullptr);
-    store.add_button("Show Pause Menu", GetFontDefault(), {50, 80}, 100, 10, [&menu](Menu*, void*){menu.toggle();}, nullptr);
+    store.add_button("Show Pause Menu", GetFontDefault(), {50, 80}, 100, 10, [&menu](Menu*, void*){PAUSE = !PAUSE; menu.toggle();}, nullptr);
+    store.add_button("Pause Updates", GetFontDefault(), {50, 110}, 100, 10, [](Menu*, void*){PAUSE = !PAUSE;}, nullptr);
     store.add_button("Spawn Missile", GetFontDefault(), {275, 50}, 100, 10, nullptr, nullptr);
     store.add_button("Spawn Turret", GetFontDefault(), {500, 50}, 100, 10, nullptr, nullptr);
     store.toggle();
@@ -103,7 +105,7 @@ int main(void)
         //-------------------------------------------------------------------------------------
         fixed_update_accumulator += GetFrameTime();
 
-        EntityManager::update();
+        if(!PAUSE) EntityManager::update();
         
         float cameraPos[3] = { camera.position.x, camera.position.y, camera.position.z };
         SetShaderValue(shader, shader.locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
@@ -127,18 +129,27 @@ int main(void)
         {
             mouse_world_position = Vector3Add(ray.position, Vector3Scale(ray.direction, distance));
         }
+
+        
         store.update();
         menu.update();
         //-------------------------------------------------------------------------------------
         
         // Run Fixed Updates
         //-------------------------------------------------------------------------------------
-        while( fixed_update_accumulator >= fixed_update_interval )
+        if( fixed_update_accumulator >= fixed_update_interval )
         {
             store.update_fixed();
             menu.update_fixed();
             //mortar_entity->update_fixed();
             fixed_update_accumulator -= fixed_update_interval;
+            if( static_cast<int>(fixed_update_accumulator) % 10 == 0)
+            {
+                lights[0].position = {static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(0, 10)), static_cast<float>(GetRandomValue(-10, 20))};
+                lights[1].position = {static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(0, 10)), static_cast<float>(GetRandomValue(-10, 20))};
+                lights[2].position = {static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(0, 10)), static_cast<float>(GetRandomValue(-10, 20))};
+                lights[3].position = {static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(0, 10)), static_cast<float>(GetRandomValue(-10, 20))};
+            }
         }
         //-------------------------------------------------------------------------------------
         
