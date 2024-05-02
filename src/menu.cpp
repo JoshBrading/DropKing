@@ -32,7 +32,7 @@ void Menu::add_image(Image* image, const Vector2 position)
 }
 
 void Menu::add_button(const std::string& label_text, const Font& font, const Vector2 position, int width, int height,
-    void(* action)(Menu* self, void* data), void* data)
+                      const std::function<void(Menu*, void*)>& action, void* data)
 {
     auto *button = new MenuButton;
     button->label.text = label_text;
@@ -98,8 +98,9 @@ void Menu::update()
             current_button_context.index = i;
             if( IsMouseButtonPressed(0) )
             {
-                labels[0].text = "CLICKED";
-                current_button_context.button->action(this, current_button_context.button->data);
+                //labels[0].text = "CLICKED";
+                if( current_button_context.button->action )
+                    current_button_context.button->action(this, current_button_context.button->data);
             }
         }
     }
@@ -125,7 +126,8 @@ void Menu::update_fixed()
 void Menu::draw() const
 {
     if( !is_open ) return;
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), {0, 0, 0, 128});
+    if( darken_background )
+        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), {0, 0, 0, 128});
     for(const auto& [text, font, size, position] : labels)
     {
         DrawText(text.c_str(), static_cast<int>(position.x), static_cast<int>(position.y), size, WHITE);

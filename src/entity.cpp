@@ -4,7 +4,7 @@
 #include <raymath.h>
 #include "entity_manager.h"
 
-Entity::Entity(const Vector3 position, const char* model_path, const char* name)
+Entity::Entity(const Vector3 position, const Vector3 rotation, const char* model_path, const char* name)
 {
     this->id = 0;
     this->name = name;
@@ -12,10 +12,11 @@ Entity::Entity(const Vector3 position, const char* model_path, const char* name)
     this->team = EntityTeam::NEUTRAL;
     this->state = EntityState::IDLE;
     this->model = LoadModel(model_path);
+    this->model.materials[0].maps->texture = LoadTexture("assets/default_small.png");
     
     this->position = position;
     this->target_position = position;
-    this->rotation = Vector3Zero();
+    this->rotation = rotation;
     this->scale = Vector3One();
     
     this->visibility = true;
@@ -38,7 +39,7 @@ void Entity::update_fixed()
 void Entity::draw()
 {
 
-    DrawModel(model, position, 1.0f, BLUE);
+    DrawModel(model, position, 1.0f, WHITE);
 }
 
 void Entity::draw_debug(const Camera& camera)

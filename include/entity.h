@@ -4,6 +4,7 @@
 
 enum EntityType
 {
+    TILE,
     MORTAR,
     SOLDIER,
 };
@@ -39,7 +40,7 @@ class Entity
 {
     friend class EntityManager;
 public:
-    Entity(const Vector3 position, const char* model_path, const char* name);
+    Entity(const Vector3 position, const Vector3 rotation, const char* model_path, const char* name);
     Entity(Entity&&) = delete; // Move constructor
     Entity(const Entity&) = delete; // Copy constructor
     Entity& operator=(Entity&&) = delete; // Move assignment operator
@@ -64,6 +65,7 @@ public:
     
     Vector3 get_target_position() const;
     void set_target_position( Vector3 target_position );
+    Model model;
     
 private:
     int id;
@@ -83,7 +85,6 @@ protected:
     Vector3 position;
     Vector3 rotation;
     Vector3 scale;
-    Model model;
     
     void set_id(int id);
 };

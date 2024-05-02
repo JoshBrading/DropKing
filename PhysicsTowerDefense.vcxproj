@@ -23,6 +23,7 @@
     <ClCompile Include="src\entity.cpp" />
     <ClCompile Include="src\entity_manager.cpp" />
     <ClCompile Include="src\f_mortar.cpp" />
+    <ClCompile Include="src\game_tile.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\menu.cpp" />
     <ClCompile Include="src\projectile.cpp" />
@@ -34,6 +35,7 @@
     <ClInclude Include="include\entity_manager.h" />
     <ClInclude Include="include\friendly.h" />
     <ClInclude Include="include\f_mortar.h" />
+    <ClInclude Include="include\game_tile.h" />
     <ClInclude Include="include\mem.h" />
     <ClInclude Include="include\menu.h" />
     <ClInclude Include="include\projectile.h" />
@@ -41,6 +43,18 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
+    <Content Include="assets\default.png" />
+    <Content Include="assets\default_small.png" />
+    <Content Include="assets\GroundTile.mtl" />
+    <Content Include="assets\GroundTile.obj" />
+    <Content Include="assets\gui\button.png" />
+    <Content Include="assets\gui\selector.png" />
+    <Content Include="assets\projectile.mtl" />
+    <Content Include="assets\projectile.obj" />
+    <Content Include="assets\shaders\glsl330\lighting.vs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="assets\shaders\glsl330\lighting.fs" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

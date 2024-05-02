@@ -4,7 +4,7 @@
 #include <raymath.h>
 #include "Projectile.h"
 
-FMortar::FMortar(const Vector3 position): Entity(position, "assets/projectile.obj", "Mortar")
+FMortar::FMortar(const Vector3 position): Entity(position, {0,0,0}, "assets/projectile.obj", "Mortar")
 {
 }
 
@@ -18,6 +18,8 @@ int NEW_TARGET_TIMER = 0;
 float TOLERANCE = 0.02f;
 void FMortar::update()
 {
+    Entity::update();
+    
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
     {
         const Model proj_model = model;
@@ -43,7 +45,7 @@ void FMortar::update()
         NEW_TARGET_TIMER--;
     }
     
-    Entity::update();
+    
     if( IsKeyDown(KEY_W) )
         position.z -= MOVE_SPEED * GetFrameTime();
     if( IsKeyDown(KEY_A) )

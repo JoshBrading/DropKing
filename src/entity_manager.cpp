@@ -1,12 +1,10 @@
 ﻿#include <format>
 #include <iostream>
 #include <string>
-
-#include "entity_manager.h"
-
 #include <ranges>
-
+#include "entity_manager.h"
 #include "f_mortar.h"
+#include "game_tile.h"
 
 EntityManager& EntityManager::instance()
 {
@@ -42,32 +40,35 @@ void EntityManager::i_draw_debug(const Camera& camera) const
         if( !entity ) continue;
 
         entity->draw_debug(camera);
-        const int length = MeasureText(std::to_string(id).c_str(), 10);
+        int length = MeasureText(std::to_string(id).c_str(), 10);
         DrawText( std::to_string(id).c_str(), x_offset - length, y_offset, 10, ORANGE );
         DrawText( entity->get_name(), x_offset + 10, y_offset, 10, GOLD );
-        
+        length = MeasureText(entity->get_name(), 10);
         const auto [x, y, z] = entity->get_position();
         const std::string text = "( X: " + std::format("{:.2f}", x) + " Y: " + std::format("{:.2f}", y) + " Z: " + std::format("{:.2f}", z) + " )";
-        DrawText(text.c_str(), x_offset + 50, y_offset, 10, GOLD );
+        DrawText(text.c_str(), x_offset + length + 20, y_offset, 10, GOLD );
         
         y_offset += 15;
     }
 }
 
-Entity* EntityManager::i_spawn_entity(const EntityType type)
+Entity* EntityManager::i_spawn_entity(const EntityType type, const Vector3 position = {0, 0, 0}, const Vector3 rotation = {0, 0, 0})
 {
     std::cout << "Entity Manager: Spawning entity of type: " << type << ".\n";
 
     Entity* entity = nullptr;
     switch( type )
     {
-        case MORTAR:
-            entity = new FMortar({0,0,0});
+        case TILE:
+            entity = new GameTile(position, rotation);
             break;
-        default:
-            return entity;
+        case MORTAR:
+            entity = new FMortar(position);
+            break;
+        case SOLDIER:
+            break;
     }
-
+    if( !entity ) return entity;
     add_entity_to_manager(entity);
     std::cout << "Entity Manager: Entity spawned.\n";
 
