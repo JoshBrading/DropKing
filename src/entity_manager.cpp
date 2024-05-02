@@ -31,15 +31,21 @@ void EntityManager::i_draw() const
     }
 }
 
+int scroll_offset = 0;
 void EntityManager::i_draw_debug(const Camera& camera) const
 {
-    int y_offset = 100;
+    bool alternate = true;
+    
+    int y_offset = 2 + scroll_offset;
+
     for( const auto& [id, entity] : entity_map_ )
     {
-        constexpr int x_offset = 100;
+        constexpr int x_offset = 30;
         if( !entity ) continue;
-
+        alternate = !alternate;
         entity->draw_debug(camera);
+        const Color color = alternate? Color{0,0,0,128}: Color{0,0,0,196};
+        DrawRectangle(0, y_offset - 3, 300, 16, color );
         int length = MeasureText(std::to_string(id).c_str(), 10);
         DrawText( std::to_string(id).c_str(), x_offset - length, y_offset, 10, ORANGE );
         DrawText( entity->get_name(), x_offset + 10, y_offset, 10, GOLD );
@@ -48,8 +54,18 @@ void EntityManager::i_draw_debug(const Camera& camera) const
         const std::string text = "( X: " + std::format("{:.2f}", x) + " Y: " + std::format("{:.2f}", y) + " Z: " + std::format("{:.2f}", z) + " )";
         DrawText(text.c_str(), x_offset + length + 20, y_offset, 10, GOLD );
         
-        y_offset += 15;
+        y_offset += 16;
     }
+    
+        if( GetMousePosition().x < 300)
+        {
+            const int change = GetMouseWheelMove();
+            if( change > 0 && y_offset > GetScreenHeight())
+                scroll_offset -= change * 40;
+            
+            if( change < 0 && scroll_offset < 0)
+                scroll_offset -= change * 40;
+        }
 }
 
 Entity* EntityManager::i_spawn_entity(const EntityType type, const Vector3 position = {0, 0, 0}, const Vector3 rotation = {0, 0, 0})

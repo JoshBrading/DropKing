@@ -66,9 +66,11 @@ struct MenuButtonContext
 
 struct MenuDropdown
 {
-    bool                        is_active;
+    bool                        is_active = false;
+    bool                        right_sided = true;
     MenuText                    label;
-    void add_button(const std::string& label_text, const Font& font, const Vector2 position, int width, int height, void (*action)(Menu* self, void* data), void* data = nullptr);
+    MenuButton* add_button(const std::string& label_text, const Font& font, const Vector2 position, int width, int height,
+                    const std::function<void(Menu* = nullptr, void* = nullptr)>& action, void* data = nullptr);
     std::vector<MenuButton*>    buttons;
     MenuButton                  *current_button;
     MenuButton                  *previous_button;
@@ -88,19 +90,19 @@ public:
 
     void add_label(const std::string& text, const Font& font, const int size, const Vector2 position);
     void add_image(Image* image, const Vector2 position);
-    MenuButton* add_button(const std::string& label_text, const Font& font, const Vector2 position, int width,
-                           int height,
+    MenuButton* add_button(const std::string& label_text, const Font& font, const Vector2 position, int width, int height,
                            const std::function<void(Menu* = nullptr, void* = nullptr)>& action, void* data = nullptr);
-    void add_dropdown(const std::string& label_text, Font* font, const Vector2& position, Image* underlay);
+    MenuDropdown* add_dropdown(const std::string& label_text, Font* font, const Vector2& position, Image* underlay);
     void toggle();
 
     void update();
     void update_fixed();
-    void draw() const;
+    void draw();
     void set_background(Image* bg);
     Menu* get_previous_menu() const;
 
     bool darken_background = true;
+    bool is_focused = false;
     
 private:
     bool is_open = false;
@@ -116,6 +118,10 @@ private:
     double move_cooldown = 200; // Cooldown in ms
     
     Image   *background;
+
+    void draw_button(const MenuButton* button, Vector2 offset = {0, 0});
+    void draw_dropdown(const MenuDropdown* dropdown);
+
 
 };
 

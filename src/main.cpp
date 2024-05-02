@@ -56,6 +56,7 @@ int main(void)
     lights[3].target = {static_cast<float>(GetRandomValue(1, 3)), static_cast<float>(GetRandomValue(0, 3)), static_cast<float>(GetRandomValue(3, 5))};
 
     //DisableCursor(); // Limit cursor to relative movement inside the window
+    
 
    //  Spawn an FMortar entity
     EntityManager::spawn_entity(EntityType::MORTAR)->model.materials->shader = shader;
@@ -93,18 +94,23 @@ int main(void)
     menu.add_button("Quit",GetFontDefault(), {100, static_cast<float>(GetScreenHeight()) - 50.0f}, 100, 10, [](Menu*, void*){SHOULD_CLOSE = !SHOULD_CLOSE;}, nullptr);
 
     Menu store;
-    store.add_button("Toggle Debug", GetFontDefault(), {50, 50}, 100, 10, [](Menu*, void*){DEBUG = !DEBUG;}, nullptr)->is_toggle = true;
-    store.add_button("Show Pause Menu", GetFontDefault(), {50, 80}, 100, 10, [&menu](Menu*, void*){PAUSE = !PAUSE; menu.toggle();}, nullptr);
-    store.add_button("Pause Updates", GetFontDefault(), {50, 110}, 100, 10, [](Menu*, void*){PAUSE = !PAUSE;}, nullptr)->is_toggle = true;
-    store.add_button("Spawn Missile", GetFontDefault(), {275, 50}, 100, 10, nullptr, nullptr);
-    store.add_button("Spawn Turret", GetFontDefault(), {500, 50}, 100, 10, nullptr, nullptr);
+    store.add_label("Debug", GetFontDefault(), 24, {GetScreenWidth() - 210.0f, 50.0f});
+    Menu debug_submenu;
+    debug_submenu.add_button("Toggle Debug", GetFontDefault(), {GetScreenWidth() - 210.0f, 75}, 100, 10, [](Menu*, void*){DEBUG = !DEBUG;}, nullptr)->is_toggle = true;
+    debug_submenu.add_button("Pause Updates", GetFontDefault(), {GetScreenWidth() - 210.0f, 100}, 100, 10, [](Menu*, void*){PAUSE = !PAUSE;}, nullptr)->is_toggle = true;
+    //debug_submenu.add_button("Show Pause Menu", GetFontDefault(), {GetScreenWidth() - 210.0f, 125}, 100, 10, [&menu](Menu*, void*){PAUSE = !PAUSE; menu.toggle();}, nullptr);
+
+    store.add_button("Debug", GetFontDefault(), {GetScreenWidth() - 210.0f, 125}, 100, 10, [&debug_submenu, &store](Menu*, void*){ store.is_focused = false; debug_submenu.toggle();}, nullptr);
+    store.add_label("Gameplay", GetFontDefault(), 24, {GetScreenWidth() - 210.0f, 150.0f});
+    store.add_button("Spawn Missile", GetFontDefault(), {GetScreenWidth() - 210.0f, 175}, 100, 10, nullptr, nullptr);
+    store.add_button("Spawn Turret", GetFontDefault(), {GetScreenWidth() - 210.0f, 200}, 100, 10, nullptr, nullptr);
     store.toggle();
     store.darken_background = false;
     
     MemoryManager::get_usage();
     while (!SHOULD_CLOSE) // Main game loop
     {
-        UpdateCamera(&camera, CAMERA_ORBITAL);
+        //UpdateCamera(&camera, CAMERA_FREE);
         // Update
         //-------------------------------------------------------------------------------------
         fixed_update_accumulator += GetFrameTime();
@@ -152,6 +158,7 @@ int main(void)
         }
         
         store.update();
+        debug_submenu.update();
         menu.update();
         //-------------------------------------------------------------------------------------
         
@@ -160,6 +167,7 @@ int main(void)
         if( fixed_update_accumulator >= fixed_update_interval )
         {
             store.update_fixed();
+            debug_submenu.update_fixed();
             menu.update_fixed();
 
             fixed_update_accumulator -= fixed_update_interval;
@@ -200,6 +208,7 @@ int main(void)
             }
             DrawFPS(20, 20);
             store.draw();
+            debug_submenu.draw();
             menu.draw();
             //const std::string position = "( X: " + std::format("{:.2f}", mouse_world_position.x) + " Y: " + std::format("{:.2f}", mouse_world_position.y) + " Z: " + std::format("{:.2f}", mouse_world_position.z) + " )";
             //const int length = MeasureText(position.c_str(), 10);
