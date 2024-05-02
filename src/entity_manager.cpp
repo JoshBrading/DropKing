@@ -43,9 +43,25 @@ void EntityManager::i_draw_debug(const Camera& camera) const
         constexpr int x_offset = 30;
         if( !entity ) continue;
         alternate = !alternate;
-        entity->draw_debug(camera);
+        //entity->draw_debug(camera);
         const Color color = alternate? Color{0,0,0,128}: Color{0,0,0,196};
-        DrawRectangle(0, y_offset - 3, 300, 16, color );
+        auto [mx, my] = GetMousePosition();
+
+        if( mx > 0 && mx < 300
+            && my > y_offset -3 && my < y_offset + 13 )
+        {
+            auto bb = GetMeshBoundingBox(entity->model.meshes[0]);
+            BeginMode3D(camera);
+            DrawCubeWires(entity->position, 2 * bb.max.x, 2 * bb.max.y, 2 * bb.max.z, RED);
+            EndMode3D();
+            DrawText(std::format("BB: {}", bb.min.x).c_str(), 350, y_offset, 16, RED);
+            DrawRectangle(0, y_offset - 3, 300, 16, RED );
+            entity->draw_debug(camera);
+        }
+        else
+        {
+            DrawRectangle(0, y_offset - 3, 300, 16, color );
+        }
         int length = MeasureText(std::to_string(id).c_str(), 10);
         DrawText( std::to_string(id).c_str(), x_offset - length, y_offset, 10, ORANGE );
         DrawText( entity->get_name(), x_offset + 10, y_offset, 10, GOLD );
@@ -53,19 +69,25 @@ void EntityManager::i_draw_debug(const Camera& camera) const
         const auto [x, y, z] = entity->get_position();
         const std::string text = "( X: " + std::format("{:.2f}", x) + " Y: " + std::format("{:.2f}", y) + " Z: " + std::format("{:.2f}", z) + " )";
         DrawText(text.c_str(), x_offset + length + 20, y_offset, 10, GOLD );
-        
+
+
         y_offset += 16;
     }
     
-        if( GetMousePosition().x < 300)
-        {
-            const int change = GetMouseWheelMove();
-            if( change > 0 && y_offset > GetScreenHeight())
-                scroll_offset -= change * 40;
+    if( GetMousePosition().x < 300)
+    {
+        const int change = GetMouseWheelMove();
+        if( change < 0 && y_offset > GetScreenHeight())
+            scroll_offset += change * 40;
             
-            if( change < 0 && scroll_offset < 0)
-                scroll_offset -= change * 40;
-        }
+        if( change > 0 && scroll_offset < 0)
+            scroll_offset += change * 40;
+    }
+}
+
+int EntityManager::i_get_entity_count() const
+{
+    return entity_map_.size();
 }
 
 Entity* EntityManager::i_spawn_entity(const EntityType type, const Vector3 position = {0, 0, 0}, const Vector3 rotation = {0, 0, 0})

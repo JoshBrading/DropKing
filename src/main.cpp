@@ -11,6 +11,7 @@
 #include <rlights.h>
 
 bool DEBUG = false;
+bool DEBUG_FOOTER = false;
 bool SHOULD_CLOSE = false;
 bool PAUSE = false;
 
@@ -96,11 +97,13 @@ int main(void)
     Menu store;
     store.add_label("Debug", GetFontDefault(), 24, {GetScreenWidth() - 210.0f, 50.0f});
     Menu debug_submenu;
-    debug_submenu.add_button("Toggle Debug", GetFontDefault(), {GetScreenWidth() - 210.0f, 75}, 100, 10, [](Menu*, void*){DEBUG = !DEBUG;}, nullptr)->is_toggle = true;
-    debug_submenu.add_button("Pause Updates", GetFontDefault(), {GetScreenWidth() - 210.0f, 100}, 100, 10, [](Menu*, void*){PAUSE = !PAUSE;}, nullptr)->is_toggle = true;
-    //debug_submenu.add_button("Show Pause Menu", GetFontDefault(), {GetScreenWidth() - 210.0f, 125}, 100, 10, [&menu](Menu*, void*){PAUSE = !PAUSE; menu.toggle();}, nullptr);
+    debug_submenu.darken_background = false;
+    debug_submenu.add_button("Show Entity List", GetFontDefault(), {GetScreenWidth() - 415.0f, 75}, 100, 10, [](Menu*, void*){DEBUG = !DEBUG;}, nullptr)->is_toggle = true;
+    debug_submenu.add_button("Show Footer", GetFontDefault(), {GetScreenWidth() - 415.0f, 100}, 100, 10, [](Menu*, void*){DEBUG_FOOTER = !DEBUG_FOOTER;}, nullptr)->is_toggle = true;
+    debug_submenu.add_button("Pause Updates", GetFontDefault(), {GetScreenWidth() - 415.0f, 125}, 100, 10, [](Menu*, void*){PAUSE = !PAUSE;}, nullptr)->is_toggle = true;
+    debug_submenu.add_button("Toggle Pause Menu", GetFontDefault(), {GetScreenWidth() - 415.0f, 150}, 100, 10, [&menu](Menu*, void*){PAUSE = !PAUSE; menu.toggle();}, nullptr);
 
-    store.add_button("Debug", GetFontDefault(), {GetScreenWidth() - 210.0f, 125}, 100, 10, [&debug_submenu, &store](Menu*, void*){ store.is_focused = false; debug_submenu.toggle();}, nullptr);
+    store.add_button("Debug", GetFontDefault(), {GetScreenWidth() - 210.0f, 75}, 100, 10, [&debug_submenu, &store](Menu*, void*){ store.is_focused = true; debug_submenu.toggle();}, nullptr);
     store.add_label("Gameplay", GetFontDefault(), 24, {GetScreenWidth() - 210.0f, 150.0f});
     store.add_button("Spawn Missile", GetFontDefault(), {GetScreenWidth() - 210.0f, 175}, 100, 10, nullptr, nullptr);
     store.add_button("Spawn Turret", GetFontDefault(), {GetScreenWidth() - 210.0f, 200}, 100, 10, nullptr, nullptr);
@@ -202,10 +205,17 @@ int main(void)
             if( DEBUG )
             {
                 EntityManager::draw_debug(camera);
+            }
+            if( DEBUG_FOOTER )
+            {
                 int usage = MemoryManager::get_usage();
                 const std::string memory_usage = std::format("Memory Usage: {}/Bytes", usage);
-                DrawText(memory_usage.c_str(), 10, GetScreenHeight() - 20, 10, WHITE);
+                DrawRectangle(0, GetScreenHeight() - 24, GetScreenWidth(), 24, BLACK);
+                DrawText(memory_usage.c_str(), 10, GetScreenHeight() - 16, 10, WHITE);
+                const std::string entity_count = std::format("Entity Count: {}", EntityManager::get_entity_count());
+                DrawText(entity_count.c_str(), 200, GetScreenHeight() - 16, 10, WHITE);
             }
+        
             DrawFPS(20, 20);
             store.draw();
             debug_submenu.draw();
