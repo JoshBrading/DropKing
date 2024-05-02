@@ -31,8 +31,9 @@ void Menu::add_image(Image* image, const Vector2 position)
     
 }
 
-void Menu::add_button(const std::string& label_text, const Font& font, const Vector2 position, int width, int height,
-                      const std::function<void(Menu*, void*)>& action, void* data)
+MenuButton* Menu::add_button(const std::string& label_text, const Font& font, const Vector2 position, int width,
+                             int height,
+                             const std::function<void(Menu*, void*)>& action, void* data)
 {
     auto *button = new MenuButton;
     button->label.text = label_text;
@@ -41,6 +42,7 @@ void Menu::add_button(const std::string& label_text, const Font& font, const Vec
     button->position = position;
     button->icon_offset = {5, 3};
     button->background = LoadTexture("assets/gui/button.png");
+    button->background_selected = LoadTexture("assets/gui/button_selected.png");
     button->width = 200;
     button->height = 20;
     button->action = action;
@@ -50,6 +52,7 @@ void Menu::add_button(const std::string& label_text, const Font& font, const Vec
         current_button_context.button = button;
         current_button_context.index = static_cast<int>(buttons.size()) - 1;
     }
+    return button;
 }
 
 void Menu::add_dropdown(const std::string& label_text, Font* font, const Vector2& position, Image* underlay)
@@ -96,12 +99,25 @@ void Menu::update()
         {
             current_button_context.button = button;
             current_button_context.index = i;
-            if( IsMouseButtonPressed(0) )
+            if( IsMouseButtonDown(0) )
             {
-                //labels[0].text = "CLICKED";
-                if( current_button_context.button->action )
-                    current_button_context.button->action(this, current_button_context.button->data);
+                if( !button->is_toggle )
+                    button->is_selected = true;
+
+                if( IsMouseButtonPressed(0))
+                {
+                    if( button->is_toggle )
+                        button->is_selected = !button->is_selected;
+                    
+                    if( button->action )
+                        button->action(this, button->data);
+                }
             }
+            else if( !button->is_toggle )
+            {
+                button->is_selected = false;
+            }
+            
         }
     }
     
@@ -118,7 +134,7 @@ void Menu::update_fixed()
     {
         const MenuButton *current_button = current_button_context.button;
         selector.target_position = Vector2Add(current_button->position, current_button->icon_offset);
-        selector.position = Vector2Lerp( selector.position, selector.target_position, 0.15f);
+        selector.position = Vector2Lerp( selector.position, selector.target_position, 0.2f);
     }
 
 }
@@ -136,7 +152,13 @@ void Menu::draw() const
     for(const auto& button : buttons)
     {
         if( !button ) continue;
-        DrawTexture(button->background, static_cast<int>(button->position.x), static_cast<int>(button->position.y), WHITE);
+        if( button->is_selected )
+        {
+            DrawTexture(button->background_selected, static_cast<int>(button->position.x), static_cast<int>(button->position.y), WHITE);
+        }else
+        {
+            DrawTexture(button->background, static_cast<int>(button->position.x), static_cast<int>(button->position.y), WHITE);
+        }
         const Vector2 label_offset = Vector2Add( button->position, button->label.position );
         DrawText(button->label.text.c_str(), static_cast<int>(label_offset.x), static_cast<int>(label_offset.y), 10, WHITE);
     }

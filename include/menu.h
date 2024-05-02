@@ -42,7 +42,8 @@ struct MenuSounds
 
 struct MenuButton
 {
-    bool        is_selected;
+    bool        is_selected = false;
+    bool        is_toggle = false;
     MenuText    label;
     Vector2     position;
     Vector2     icon_offset;
@@ -87,7 +88,9 @@ public:
 
     void add_label(const std::string& text, const Font& font, const int size, const Vector2 position);
     void add_image(Image* image, const Vector2 position);
-    void add_button(const std::string& label_text, const Font& font, const Vector2 position, int width, int height, const std::function<void(Menu* = nullptr, void* = nullptr)>& action, void* data = nullptr);
+    MenuButton* add_button(const std::string& label_text, const Font& font, const Vector2 position, int width,
+                           int height,
+                           const std::function<void(Menu* = nullptr, void* = nullptr)>& action, void* data = nullptr);
     void add_dropdown(const std::string& label_text, Font* font, const Vector2& position, Image* underlay);
     void toggle();
 

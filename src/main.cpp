@@ -47,9 +47,13 @@ int main(void)
     // Create lights
     Light lights[MAX_LIGHTS] = {};
     lights[0] = CreateLight(LIGHT_POINT, { -2, 1, -2 }, Vector3Zero(), YELLOW, shader);
+    lights[0].target = {static_cast<float>(GetRandomValue(1, 3)), static_cast<float>(GetRandomValue(0, 3)), static_cast<float>(GetRandomValue(3, 5))};
     lights[1] = CreateLight(LIGHT_POINT, { 2, 1, 2 }, Vector3Zero(), RED, shader);
+    lights[1].target = {static_cast<float>(GetRandomValue(1, 3)), static_cast<float>(GetRandomValue(0, 3)), static_cast<float>(GetRandomValue(3, 5))};
     lights[2] = CreateLight(LIGHT_POINT, { -2, 1, 2 }, Vector3Zero(), GREEN, shader);
+    lights[2].target = {static_cast<float>(GetRandomValue(1, 3)), static_cast<float>(GetRandomValue(0, 3)), static_cast<float>(GetRandomValue(3, 5))};
     lights[3] = CreateLight(LIGHT_POINT, { 2, 1, -2 }, Vector3Zero(), BLUE, shader);
+    lights[3].target = {static_cast<float>(GetRandomValue(1, 3)), static_cast<float>(GetRandomValue(0, 3)), static_cast<float>(GetRandomValue(3, 5))};
 
     //DisableCursor(); // Limit cursor to relative movement inside the window
 
@@ -89,9 +93,9 @@ int main(void)
     menu.add_button("Quit",GetFontDefault(), {100, static_cast<float>(GetScreenHeight()) - 50.0f}, 100, 10, [](Menu*, void*){SHOULD_CLOSE = !SHOULD_CLOSE;}, nullptr);
 
     Menu store;
-    store.add_button("Toggle Debug", GetFontDefault(), {50, 50}, 100, 10, [](Menu*, void*){DEBUG = !DEBUG;}, nullptr);
+    store.add_button("Toggle Debug", GetFontDefault(), {50, 50}, 100, 10, [](Menu*, void*){DEBUG = !DEBUG;}, nullptr)->is_toggle = true;
     store.add_button("Show Pause Menu", GetFontDefault(), {50, 80}, 100, 10, [&menu](Menu*, void*){PAUSE = !PAUSE; menu.toggle();}, nullptr);
-    store.add_button("Pause Updates", GetFontDefault(), {50, 110}, 100, 10, [](Menu*, void*){PAUSE = !PAUSE;}, nullptr);
+    store.add_button("Pause Updates", GetFontDefault(), {50, 110}, 100, 10, [](Menu*, void*){PAUSE = !PAUSE;}, nullptr)->is_toggle = true;
     store.add_button("Spawn Missile", GetFontDefault(), {275, 50}, 100, 10, nullptr, nullptr);
     store.add_button("Spawn Turret", GetFontDefault(), {500, 50}, 100, 10, nullptr, nullptr);
     store.toggle();
@@ -105,8 +109,25 @@ int main(void)
         //-------------------------------------------------------------------------------------
         fixed_update_accumulator += GetFrameTime();
 
-        if(!PAUSE) EntityManager::update();
-        
+        if(!PAUSE)
+        {
+            EntityManager::update();
+            
+
+            for(auto& light : lights)
+            {
+                const float distance = Vector3Distance(light.position, light.target);
+                if(distance > 0.2f)
+                {
+                    const Vector3 direction = Vector3Normalize(Vector3Subtract(light.target, light.position));
+                    light.position = Vector3Add(light.position, Vector3Scale(direction, 10.0f * GetFrameTime()));
+                }
+                else
+                {
+                    light.target = {static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(-10, 10))};
+                }
+            }
+        }
         float cameraPos[3] = { camera.position.x, camera.position.y, camera.position.z };
         SetShaderValue(shader, shader.locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
         
@@ -129,7 +150,6 @@ int main(void)
         {
             mouse_world_position = Vector3Add(ray.position, Vector3Scale(ray.direction, distance));
         }
-
         
         store.update();
         menu.update();
@@ -141,15 +161,8 @@ int main(void)
         {
             store.update_fixed();
             menu.update_fixed();
-            //mortar_entity->update_fixed();
+
             fixed_update_accumulator -= fixed_update_interval;
-            if( static_cast<int>(fixed_update_accumulator) % 10 == 0)
-            {
-                lights[0].position = {static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(0, 10)), static_cast<float>(GetRandomValue(-10, 20))};
-                lights[1].position = {static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(0, 10)), static_cast<float>(GetRandomValue(-10, 20))};
-                lights[2].position = {static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(0, 10)), static_cast<float>(GetRandomValue(-10, 20))};
-                lights[3].position = {static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(0, 10)), static_cast<float>(GetRandomValue(-10, 20))};
-            }
         }
         //-------------------------------------------------------------------------------------
         
