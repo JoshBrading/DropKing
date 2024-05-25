@@ -10,6 +10,8 @@
 #define RLIGHTS_IMPLEMENTATION
 #include <rlights.h>
 
+#include "player.h"
+
 bool DEBUG = false;
 bool DEBUG_FOOTER = false;
 bool SHOULD_CLOSE = false;
@@ -21,7 +23,7 @@ int main(void)
     SetConfigFlags(FLAG_VSYNC_HINT); 
     constexpr int screen_width = 1280;
     constexpr int screen_height = 720;
-    InitWindow(screen_width, screen_height, "Humans Vs Automatons - [raylib]");
+    InitWindow(screen_width, screen_height, "DropKing - [raylib]");
     SetExitKey(KEY_NULL);
     // 3D Camera
     Camera3D camera;
@@ -46,7 +48,7 @@ int main(void)
 
 
     // Create lights
-    Light lights[MAX_LIGHTS] = {};
+    /*Light lights[MAX_LIGHTS] = {};
     lights[0] = CreateLight(LIGHT_POINT, { -2, 1, -2 }, Vector3Zero(), YELLOW, shader);
     lights[0].target = {static_cast<float>(GetRandomValue(1, 3)), static_cast<float>(GetRandomValue(0, 3)), static_cast<float>(GetRandomValue(3, 5))};
     lights[1] = CreateLight(LIGHT_POINT, { 2, 1, 2 }, Vector3Zero(), RED, shader);
@@ -63,11 +65,11 @@ int main(void)
     EntityManager::spawn_entity(EntityType::MORTAR)->model.materials->shader = shader;
     EntityManager::spawn_entity(EntityType::MORTAR)->model.materials->shader = shader;
     EntityManager::spawn_entity(EntityType::MORTAR)->model.materials->shader = shader;
-    EntityManager::spawn_entity(EntityType::MORTAR)->model.materials->shader = shader;
+    EntityManager::spawn_entity(EntityType::MORTAR)->model.materials->shader = shader;*/
 
     constexpr float fixed_update_interval = 1.0f / 60.0f;
     float fixed_update_accumulator = 0.0f;
-    constexpr int board_rows = 7;
+    /*constexpr int board_rows = 7;
 
     for( int i = 0; i < board_rows; i++ )
     {
@@ -80,7 +82,7 @@ int main(void)
             auto ent = EntityManager::spawn_entity(TILE, position, {0, static_cast<float>(i + j) * 45.0f, 0});
             ent->model.materials[0].shader = shader;
         }
-    }
+    }*/
     
 
     Menu menu;
@@ -109,6 +111,9 @@ int main(void)
     store.add_button("Spawn Turret", GetFontDefault(), {GetScreenWidth() - 210.0f, 200}, 100, 10, nullptr, nullptr);
     store.toggle();
     store.darken_background = false;
+
+    Player player({300, 100}, 100, 100);
+    
     
     MemoryManager::get_usage();
     while (!SHOULD_CLOSE) // Main game loop
@@ -122,32 +127,7 @@ int main(void)
         {
             EntityManager::update();
             
-
-            for(auto& light : lights)
-            {
-                const float distance = Vector3Distance(light.position, light.target);
-                if(distance > 0.2f)
-                {
-                    const Vector3 direction = Vector3Normalize(Vector3Subtract(light.target, light.position));
-                    light.position = Vector3Add(light.position, Vector3Scale(direction, 10.0f * GetFrameTime()));
-                }
-                else
-                {
-                    light.target = {static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(-10, 10)), static_cast<float>(GetRandomValue(-10, 10))};
-                }
-            }
         }
-        float cameraPos[3] = { camera.position.x, camera.position.y, camera.position.z };
-        SetShaderValue(shader, shader.locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
-        
-        // Check key inputs to enable/disable lights
-        if (IsKeyPressed(KEY_Y)) { lights[0].enabled = !lights[0].enabled; }
-        if (IsKeyPressed(KEY_R)) { lights[1].enabled = !lights[1].enabled; }
-        if (IsKeyPressed(KEY_G)) { lights[2].enabled = !lights[2].enabled; }
-        if (IsKeyPressed(KEY_B)) { lights[3].enabled = !lights[3].enabled; }
-        
-        // Update light values (actually, only enable/disable them)
-        for (int i = 0; i < MAX_LIGHTS; i++) UpdateLightValues(shader, lights[i]);
         
         Vector2 mouse_screen_position = GetMousePosition();
         
@@ -155,10 +135,6 @@ int main(void)
         Ray ray = GetMouseRay(mouse_screen_position, camera);
         Vector3 mouse_world_position = Vector3Zero();
         float distance = 0;
-        if (ray_intersects_plane(ray, Vector3{0, 0, 0}, Vector3{0, 1, 0}, &distance))
-        {
-            mouse_world_position = Vector3Add(ray.position, Vector3Scale(ray.direction, distance));
-        }
         
         store.update();
         debug_submenu.update();
@@ -167,12 +143,13 @@ int main(void)
         
         // Run Fixed Updates
         //-------------------------------------------------------------------------------------
-        if( fixed_update_accumulator >= fixed_update_interval )
+        if( fixed_update_accumulator >= fixed_update_interval && !PAUSE)
         {
+            player.update();
             store.update_fixed();
             debug_submenu.update_fixed();
             menu.update_fixed();
-
+            
             fixed_update_accumulator -= fixed_update_interval;
         }
         //-------------------------------------------------------------------------------------
@@ -182,7 +159,7 @@ int main(void)
 
         BeginDrawing();
             ClearBackground(DARKGRAY);
-            BeginMode3D(camera);
+            //BeginMode3D(camera);
                 BeginShaderMode(shader);
                     // Draw mouse position
                     DrawSphere(mouse_world_position, 0.1f, RED);
@@ -190,14 +167,9 @@ int main(void)
 
                     EntityManager::draw();
                 EndShaderMode();
-        for (int i = 0; i < MAX_LIGHTS; i++)
-        {
-            if (lights[i].enabled) DrawSphereEx(lights[i].position, 0.2f, 8, 8, lights[i].color);
-            else DrawSphereWires(lights[i].position, 0.2f, 8, 8, ColorAlpha(lights[i].color, 0.3f));
-        }
 
-
-            EndMode3D();
+            player.draw();
+            //EndMode3D();
             if( IsKeyPressed(KEY_F1))
             {
                 DEBUG = !DEBUG;

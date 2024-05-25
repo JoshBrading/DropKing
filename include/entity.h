@@ -85,6 +85,9 @@ protected:
     Vector3 position;
     Vector3 rotation;
     Vector3 scale;
+
+    // 2D Conversion
+    Vector2 position_2d;
     
     void set_id(int id);
 };

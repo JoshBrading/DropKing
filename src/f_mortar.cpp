@@ -14,7 +14,7 @@ void FMortar::draw()
 }
 
 float MOVE_SPEED = 20.0f;
-float TOLERANCE = 0.02f;
+float _TOLERANCE = 0.02f;
 
 void get_new_target(FMortar *mortar)
 {
@@ -32,7 +32,7 @@ void FMortar::update()
         auto projectile = new Projectile(position, {10, 30, 0}, proj_model);
     }
     const float distance = Vector3Distance(position, get_target_position());
-    if(distance > TOLERANCE)
+    if(distance > _TOLERANCE)
     {
         const Vector3 direction = Vector3Normalize(Vector3Subtract(get_target_position(), position));
         position = Vector3Add(position, Vector3Scale(direction, MOVE_SPEED * GetFrameTime()));
