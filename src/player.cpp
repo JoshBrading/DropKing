@@ -1,8 +1,12 @@
 ﻿#include "player.h"
 #include <raymath.h>
 
-Polygon MOCK;
-Circle circle;
+Polygon* MOCK;
+Circle* circle;
+Collider* c1;
+Collider* c2;
+Collider* c3;
+
 Player::Player(const Vector2 position, const int width, const int height)
 {
     this->position = position;
@@ -10,25 +14,48 @@ Player::Player(const Vector2 position, const int width, const int height)
     this->height = height;
 
     Vector2 offset = {width / 2.0f, height / 2.0f};
-    this->polygon.origin = position;
-    this->polygon.points.push_back( Vector2Add(position, {-offset.x, -offset.y}) );
-    this->polygon.points.push_back( Vector2Add(position, { 15,  -80}) );
-    this->polygon.points.push_back( Vector2Add(position, { offset.x, -offset.y}) ); 
-    this->polygon.points.push_back( Vector2Add(position, { 70,  20}) );
-    this->polygon.points.push_back( Vector2Add(position, { offset.x,  offset.y}) );
-    this->polygon.points.push_back( Vector2Add(position, { 20,  70}) );
-    this->polygon.points.push_back( Vector2Add(position, {-offset.x,  offset.y}) );
-    this->polygon.points.push_back( Vector2Add(position, { -70,  20}) );
+    this->polygon = new Polygon();
+    this->polygon->origin = position;
+    this->polygon->points.push_back( Vector2Add(position, {-offset.x, -offset.y}) );
+    this->polygon->points.push_back( Vector2Add(position, { 15,  -80}) );
+    this->polygon->points.push_back( Vector2Add(position, { offset.x, -offset.y}) ); 
+    this->polygon->points.push_back( Vector2Add(position, { 70,  20}) );
+    this->polygon->points.push_back( Vector2Add(position, { offset.x,  offset.y}) );
+    this->polygon->points.push_back( Vector2Add(position, { 20,  70}) );
+    this->polygon->points.push_back( Vector2Add(position, {-offset.x,  offset.y}) );
+    this->polygon->points.push_back( Vector2Add(position, { -70,  20}) );
 
+    c1 = new Collider(polygon);
+    c1->is_static = false;
+    c1->parent = nullptr;
+    c1->type = POLYGON;
+    c1->polygon = polygon;
+    Collision::add_collider(c1);
     
-    MOCK.origin = {250, 450};
-    MOCK.points.push_back({200, 400});
-    MOCK.points.push_back({200, 500});
-    MOCK.points.push_back({300, 500});
-    MOCK.points.push_back({300, 400});
+    MOCK = new Polygon();
+    MOCK->origin = {250, 450};
+    MOCK->points.push_back({200, 400});
+    MOCK->points.push_back({200, 500});
+    MOCK->points.push_back({300, 500});
+    MOCK->points.push_back({300, 400});
 
-    circle.origin = {400, 400};
-    circle.radius = 25;
+    c2 = new Collider(MOCK);
+    c2->is_static = false;
+    c2->parent = nullptr;
+    c2->type = POLYGON;
+    c2->polygon = MOCK;
+    Collision::add_collider(c2);
+
+    circle = new Circle();
+    circle->origin = {400, 400};
+    circle->radius = 25;
+
+    c3 = new Collider(circle);
+    c3->is_static = true;
+    c3->parent = nullptr;
+    c3->type = CIRCLE;
+    c3->circle = circle;
+    Collision::add_collider(c3);
 }
 
 Vector2 rotate_point_about_target(const Vector2 origin, Vector2 point, const float angle) {
@@ -63,82 +90,50 @@ void Player::update()
     if( IsKeyDown(KEY_D ))
         position = Vector2Add(position, {4, 0});
 
-    if( IsKeyDown( KEY_RIGHT ) )
+    polygon->origin = position;
+    Vector2 offset = Vector2Subtract(position, polygon->origin);
+
+    for( auto& point: polygon->points )
     {
-        for( auto& point: polygon.points )
+        point = Vector2Add(point, offset);
+    }
+    
+    
+    /*if( IsKeyDown( KEY_RIGHT ) )
+    {
+        for( auto& point: polygon->points )
         {
             point = rotate_point_about_target(position, point, 2);
         }
     }
     if( IsKeyDown( KEY_LEFT ) )
     {
-        for( auto& point: polygon.points )
+        for( auto& point: polygon->points )
         {
             point = rotate_point_about_target(position, point, -2);
         }
     }
 
-    Vector2 offset = Vector2Subtract(position, polygon.origin);
-    polygon.origin = position;
-    for( auto& point: polygon.points )
-    {
-        point = Vector2Add(point, offset);
-    }  
-    if( polygon_intersects_polygon(polygon, MOCK, normal, depth) )
-    {
-        Vector2 displacement = Vector2Scale(normal, depth / 2);
-        position = Vector2Add(position, displacement);
-        polygon.origin = position;
-        for( auto& point: polygon.points )
-        {
-            point = Vector2Add(point, displacement);
-        }
-
-        MOCK.origin = Vector2Subtract(MOCK.origin, displacement);
-        for( auto& point: MOCK.points )
-        {
-            point = Vector2Subtract(point, displacement);
-        }
-    }
-
-    if( polygon_intersects_circle(polygon, circle, normal, depth) )
-    {
-        Vector2 displacement = Vector2Scale(normal, depth);
-        position = Vector2Add(position, displacement);
-        polygon.origin = position;
-        for( auto& point: polygon.points )
-        {
-            point = Vector2Add(point, displacement);
-        }   
-    }
-
-    if( polygon_intersects_circle(MOCK, circle, normal, depth) )
-    {
-        Vector2 displacement = Vector2Scale(normal, depth);
-        MOCK.origin = Vector2Add(MOCK.origin, displacement);
-        for( auto& point: MOCK.points )
-        {
-            point = Vector2Add(point, displacement);
-        }   
-    }
+    
+      */
 }
 
 
 void Player::draw()
 {
-    for( int i = 0; i < polygon.points.size(); i++ )
+    for( int i = 0; i < polygon->points.size(); i++ )
     {
-        DrawLine(polygon.origin.x, polygon.origin.y, polygon.points[i].x, polygon.points[i].y, BLUE);
-        DrawLine(polygon.points[i].x, polygon.points[i].y, polygon.points[(i + 1) % polygon.points.size()].x, polygon.points[(i + 1) % polygon.points.size()].y, SKYBLUE);
+        DrawLine(polygon->origin.x, polygon->origin.y, polygon->points[i].x, polygon->points[i].y, BLUE);
+        DrawLine(polygon->points[i].x, polygon->points[i].y, polygon->points[(i + 1) % polygon->points.size()].x, polygon->points[(i + 1) % polygon->points.size()].y, SKYBLUE);
     }
     DrawCircle(position.x, position.y, 5, SKYBLUE);
 
-    DrawCircle(circle.origin.x, circle.origin.y, circle.radius, RED);
+    DrawCircle(circle->origin.x, circle->origin.y, circle->radius, RED);
 
-    for( int i = 0; i < MOCK.points.size(); i++ )
+    for( int i = 0; i < MOCK->points.size(); i++ )
     {
-        DrawLine(MOCK.origin.x, MOCK.origin.y, MOCK.points[i].x, MOCK.points[i].y, YELLOW);
-        DrawLine(MOCK.points[i].x, MOCK.points[i].y, MOCK.points[(i + 1) % MOCK.points.size()].x, MOCK.points[(i + 1) % MOCK.points.size()].y, GOLD);
+        DrawLine(MOCK->origin.x, MOCK->origin.y, MOCK->points[i].x, MOCK->points[i].y, YELLOW);
+        DrawLine(MOCK->points[i].x, MOCK->points[i].y, MOCK->points[(i + 1) % MOCK->points.size()].x, MOCK->points[(i + 1) % MOCK->points.size()].y, GOLD);
     }
-    DrawCircle(MOCK.origin.x, MOCK.origin.y, 5, GOLD);
+    DrawCircle(MOCK->origin.x, MOCK->origin.y, 5, GOLD);
 }

@@ -46,7 +46,8 @@ int main(void)
     float ambient[] = {1.1f, 1.1f, 1.1f, 1.0f};
     SetShaderValue(shader, ambientLoc, ambient, SHADER_UNIFORM_VEC4);
 
-
+    
+    //SetTargetFPS(0);
     // Create lights
     /*Light lights[MAX_LIGHTS] = {};
     lights[0] = CreateLight(LIGHT_POINT, { -2, 1, -2 }, Vector3Zero(), YELLOW, shader);
@@ -153,7 +154,8 @@ int main(void)
             fixed_update_accumulator -= fixed_update_interval;
         }
         //-------------------------------------------------------------------------------------
-        
+        Collision::update();
+        Collision::draw_debug();
         // Draw
         //-------------------------------------------------------------------------------------
 

@@ -3,6 +3,15 @@
 #include <vector>
 #include <raylib.h>
 
+#include "entity.h"
+
+
+enum Shape
+{
+    POLYGON,
+    CIRCLE
+};
+
 struct Polygon
 {
     Vector2 origin;
@@ -15,10 +24,37 @@ struct Circle
     float radius;
 };
 
-bool line_intersects_line( Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2 );
+struct Collider
+{
+    bool is_static = false;
+    Entity* parent;
 
-bool polygon_intersects_polygon(const Polygon& p1, const Polygon& p2, Vector2 &normal, float &depth );
+    Shape type;
+    union
+    {
+        Polygon* polygon;
+        Circle* circle;
+    };
+    
+    Collider(Polygon* p): type(POLYGON), polygon(p) {}
+    Collider(Circle* c): type(CIRCLE), circle(c) {}
+};
 
-bool polygon_intersects_circle(const Polygon& p, const Circle& c, Vector2& normal, float& depth);
+class Collision
+{
+public:
+    static Collision& instance();
+    static void update() { instance().i_update();}
+    static void draw_debug() { instance().i_draw_debug();}
+    static void add_collider(Collider* collider) { instance().i_add_collider(collider);}
+private:
+    Collision() = default;
+    std::vector<Collider*> colliders;
+    void i_update();
+    void i_draw_debug() const;
+    void i_add_collider( Collider* collider);
+};
+
+
 
 #endif // COLLISION_H

@@ -12,7 +12,7 @@ public:
     int width;
     int height;
 
-    Polygon polygon;
+    Polygon* polygon;
     
     void update();
 
