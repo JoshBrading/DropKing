@@ -1,6 +1,8 @@
 ﻿#include "collision.h"
 #include <raymath.h>
 
+#include "transform.h"
+
 float TOLERANCE = 0.01f;
 
 Collision& Collision::instance()
@@ -8,6 +10,38 @@ Collision& Collision::instance()
     static auto instance = Collision();
     return instance;
 }
+
+void Body::rotate(float degrees) const
+{
+    if( type != POLYGON )
+        return;
+    for( auto& point: polygon->points )
+    {
+        point = transform::rotate_point_about_target(polygon->origin, point, degrees);
+    }
+}
+
+void Body::translate( Vector2 translation ) const
+{
+    if( type == CIRCLE )
+    {
+        circle->origin = Vector2Add(circle->origin, translation);
+    }
+    if( type == POLYGON )
+    {
+        polygon->origin = Vector2Add(polygon->origin, translation);
+        for( auto& point: polygon->points )
+        {
+            point = Vector2Add(point, translation);
+        }
+    }
+}
+
+void Body::apply_force( Vector2 force )
+{
+    this->force = force;
+}
+
 
 void project_polygon_to_axis(const Vector2 axis, const Polygon* p, float &min, float &max)
 {
@@ -165,7 +199,7 @@ bool polygon_intersects_circle(const Polygon* p, const Circle* c, Vector2& norma
     return true;
 }
 
-bool check_collision(Collider* a, Collider* b, Vector2& normal, float& depth)
+bool check_collision(Body* a, Body* b, Vector2& normal, float& depth)
 {
     if( a->is_static && b->is_static )
         return false;
@@ -267,7 +301,7 @@ void resolve_circle_polygon(Circle* circle, Polygon* polygon, bool circle_is_sta
 
 }
 
-void resolve(Collider* a, Collider* b, Vector2 normal, float depth)
+void resolve(Body* a, Body* b, Vector2 normal, float depth)
 {
     if( a->is_static && b->is_static )
         return;
@@ -284,9 +318,21 @@ void resolve(Collider* a, Collider* b, Vector2 normal, float depth)
         if( b->type == POLYGON )
             resolve_circle_polygon(a->circle, b->polygon, a->is_static, b->is_static, normal, depth);
     }
+    
+    float e = std::min(a->restitution, b->restitution);
+    float relative_velocity = Vector2DotProduct(Vector2Subtract(b->velocity, a->velocity), normal);
+    float mass_sum = (a->is_static ? 0.0f : 1.0f / a->mass) + (b->is_static ? 0.0f : 1.0f / b->mass);
+
+    if (mass_sum == 0.0f) return;
+    
+    float j = -(1 + e) * relative_velocity / mass_sum;
+    if( !a->is_static )
+        a->velocity = Vector2Subtract(a->velocity, Vector2Scale(normal, j / a->mass));
+    if( !b->is_static )
+        b->velocity = Vector2Add(b->velocity, Vector2Scale(normal, j / b->mass));
 }
 
-void Collision::i_add_collider(Collider* collider)
+void Collision::i_add_collider(Body* collider)
 {
     colliders.push_back(collider);
 }
@@ -295,8 +341,15 @@ void Collision::i_update()
 {
     for( int i = 0; i < colliders.size() - 1; i++ )
     {
-        for( int j = i + 1; j < colliders.size(); j++ )
+        Body* a = colliders[i];
+        Vector2 acceleration = Vector2Scale(a->force, 1.0f / a->mass);
+        a->velocity = Vector2Add(a->velocity, acceleration);
+        a->force = {0, 0};
+        a->translate(Vector2Scale(a->velocity, GetFrameTime()));
+        for( int j = 0; j < colliders.size(); j++ )
         {
+            if( i == j )
+                continue;
             Vector2 normal;
             float depth;
             if( check_collision(colliders[i], colliders[j], normal, depth) )
@@ -315,8 +368,16 @@ void Collision::i_draw_debug() const
         {
             for( int i = 0; i < collider->polygon->points.size(); i++ )
             {
-                DrawLine(collider->polygon->origin.x, collider->polygon->origin.y, collider->polygon->points[i].x, collider->polygon->points[i].y, RED);
-                DrawLine(collider->polygon->points[i].x, collider->polygon->points[i].y, collider->polygon->points[(i + 1) % collider->polygon->points.size()].x, collider->polygon->points[(i + 1) % collider->polygon->points.size()].y, RED);
+                if( !collider->is_static )
+                {
+                    DrawCircle(collider->polygon->origin.x, collider->polygon->origin.y, 2, WHITE);
+                    DrawLineEx(collider->polygon->points[i], collider->polygon->points[(i + 1) % collider->polygon->points.size()], 2, RED);
+                }
+                else
+                {
+                    DrawCircle(collider->polygon->origin.x, collider->polygon->origin.y, 2, WHITE);
+                    DrawLineEx(collider->polygon->points[i], collider->polygon->points[(i + 1) % collider->polygon->points.size()], 2, SKYBLUE);
+                }
             }
         }
         if( collider->type == CIRCLE )

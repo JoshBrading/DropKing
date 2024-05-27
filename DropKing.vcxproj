@@ -102,6 +102,7 @@
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
     <ClCompile Include="src\projectile.cpp" />
+    <ClCompile Include="src\transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\collision.h" />
@@ -115,6 +116,7 @@
     <ClInclude Include="include\menu.h" />
     <ClInclude Include="include\player.h" />
     <ClInclude Include="include\projectile.h" />
+    <ClInclude Include="include\transform.h" />
     <ClInclude Include="include\weapon.h" />
   </ItemGroup>
   <ItemGroup>

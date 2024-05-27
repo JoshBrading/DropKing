@@ -113,9 +113,100 @@ int main(void)
     store.toggle();
     store.darken_background = false;
 
+
+    
+    Polygon* MOCK;
+    
+    Body* c2;
+    
+    MOCK = new Polygon();
+    MOCK->origin = {250, 450};
+    MOCK->points.push_back({200, 400});
+    MOCK->points.push_back({200, 500});
+    MOCK->points.push_back({300, 500});
+    MOCK->points.push_back({300, 400});
+    
+    int width = GetScreenWidth();
+    int height = GetScreenHeight();
+    
+    Polygon* roof = new Polygon();
+    Body* c_roof = new Body(roof);
+    roof->origin = {width / 2.0f, -10};
+    roof->points.push_back({-20, -20});
+    roof->points.push_back({(float)width + 20, -20});
+    roof->points.push_back({(float)width + 20, 5});
+    roof->points.push_back({-20, 5});
+    c_roof->is_static = true;
+    c_roof->parent = nullptr;
+    c_roof->type = POLYGON;
+    c_roof->polygon = roof;
+    Collision::add_collider(c_roof);
+
+    Polygon* floor = new Polygon();
+    Body* c_floor = new Body(floor);
+    floor->origin = {width / 2.0f, (float)height + 10};
+    floor->points.push_back({-20, (float)height + 20});
+    floor->points.push_back({(float)width + 20, (float)height + 20});
+    floor->points.push_back({(float)width + 20, (float)height - 5});
+    floor->points.push_back({-20, (float)height - 5});
+    c_floor->is_static = true;
+    c_floor->parent = nullptr;
+    c_floor->type = POLYGON;
+    c_floor->polygon = floor;
+    Collision::add_collider(c_floor);
+
+    Polygon* left_wall = new Polygon();
+    Body* c_left_wall = new Body(left_wall);
+    left_wall->origin = {-10, height / 2.0f};
+    left_wall->points.push_back({-20, -20});
+    left_wall->points.push_back({5, -20});
+    left_wall->points.push_back({5, (float)height + 20});
+    left_wall->points.push_back({-20, (float)height + 20});
+    c_left_wall->is_static = true;
+    c_left_wall->parent = nullptr;
+    c_left_wall->type = POLYGON;
+    c_left_wall->polygon = left_wall;
+    Collision::add_collider(c_left_wall);
+
+    Polygon* right_wall = new Polygon();
+    Body* c_right_wall = new Body(right_wall);
+    right_wall->origin = {(float)width + 10, height / 2.0f};
+    right_wall->points.push_back({(float)width + 20, -20});
+    right_wall->points.push_back({(float)width - 5, -20});
+    right_wall->points.push_back({(float)width - 5, (float)height + 20});
+    right_wall->points.push_back({(float)width + 20, (float)height + 20});
+    c_right_wall->is_static = true;
+    c_right_wall->parent = nullptr;
+    c_right_wall->type = POLYGON;
+    c_right_wall->polygon = right_wall;
+    Collision::add_collider(c_right_wall);
+    
+    c2 = new Body(MOCK);
+    c2->is_static = false;
+    c2->parent = nullptr;
+    c2->type = POLYGON;
+    c2->polygon = MOCK;
+    Collision::add_collider(c2);
+
+    Polygon* octogon = new Polygon();
+    Body* c_octogon = new Body(octogon);
+    octogon->origin = {800, 400};
+    octogon->points.push_back({775, 350});
+    octogon->points.push_back({825, 350});
+    octogon->points.push_back({850, 375});
+    octogon->points.push_back({850, 425});
+    octogon->points.push_back({825, 450});
+    octogon->points.push_back({775, 450});
+    octogon->points.push_back({750, 425});
+    octogon->points.push_back({750, 375});
+    c_octogon->is_static = false;
+    c_octogon->parent = nullptr;
+    c_octogon->type = POLYGON;
+    c_octogon->polygon = octogon;
+    Collision::add_collider(c_octogon);
+    
+    
     Player player({300, 100}, 100, 100);
-    
-    
     MemoryManager::get_usage();
     while (!SHOULD_CLOSE) // Main game loop
     {
@@ -151,6 +242,8 @@ int main(void)
             debug_submenu.update_fixed();
             menu.update_fixed();
             
+            c2->rotate(2);
+            
             fixed_update_accumulator -= fixed_update_interval;
         }
         //-------------------------------------------------------------------------------------
@@ -171,6 +264,7 @@ int main(void)
                 EndShaderMode();
 
             player.draw();
+        
             //EndMode3D();
             if( IsKeyPressed(KEY_F1))
             {
@@ -191,9 +285,9 @@ int main(void)
             }
         
             DrawFPS(20, 20);
-            store.draw();
-            debug_submenu.draw();
-            menu.draw();
+            //store.draw();
+            //debug_submenu.draw();
+            //menu.draw();
             //const std::string position = "( X: " + std::format("{:.2f}", mouse_world_position.x) + " Y: " + std::format("{:.2f}", mouse_world_position.y) + " Z: " + std::format("{:.2f}", mouse_world_position.z) + " )";
             //const int length = MeasureText(position.c_str(), 10);
             //DrawText(position.c_str(), static_cast<int>(mouse_screen_position.x) - (length / 2), static_cast<int>(mouse_screen_position.y) + 10, 10, WHITE );
