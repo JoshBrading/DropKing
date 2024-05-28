@@ -20,7 +20,7 @@ bool PAUSE = false;
 int main(void)
 {
     // Init window
-    SetConfigFlags(FLAG_VSYNC_HINT); 
+    //SetConfigFlags(FLAG_VSYNC_HINT); 
     constexpr int screen_width = 1280;
     constexpr int screen_height = 720;
     InitWindow(screen_width, screen_height, "DropKing - [raylib]");
@@ -47,7 +47,7 @@ int main(void)
     SetShaderValue(shader, ambientLoc, ambient, SHADER_UNIFORM_VEC4);
 
     
-    //SetTargetFPS(0);
+    SetTargetFPS(0);
     // Create lights
     /*Light lights[MAX_LIGHTS] = {};
     lights[0] = CreateLight(LIGHT_POINT, { -2, 1, -2 }, Vector3Zero(), YELLOW, shader);
@@ -140,6 +140,7 @@ int main(void)
     c_roof->parent = nullptr;
     c_roof->type = POLYGON;
     c_roof->polygon = roof;
+    c_roof->rotation_static = true;
     Collision::add_collider(c_roof);
 
     Polygon* floor = new Polygon();
@@ -153,6 +154,7 @@ int main(void)
     c_floor->parent = nullptr;
     c_floor->type = POLYGON;
     c_floor->polygon = floor;
+    c_floor->rotation_static = true;
     Collision::add_collider(c_floor);
 
     Polygon* left_wall = new Polygon();
@@ -166,6 +168,7 @@ int main(void)
     c_left_wall->parent = nullptr;
     c_left_wall->type = POLYGON;
     c_left_wall->polygon = left_wall;
+    c_left_wall->rotation_static = true;
     Collision::add_collider(c_left_wall);
 
     Polygon* right_wall = new Polygon();
@@ -179,7 +182,22 @@ int main(void)
     c_right_wall->parent = nullptr;
     c_right_wall->type = POLYGON;
     c_right_wall->polygon = right_wall;
+    c_right_wall->rotation_static = true;
     Collision::add_collider(c_right_wall);
+
+    Polygon* ramp = new Polygon();
+    Body* c_ramp = new Body(ramp);
+    ramp->origin = {600, 350};
+    ramp->points.push_back({400, 500});
+    ramp->points.push_back({800, 200});
+    ramp->points.push_back({800, 300});
+    ramp->points.push_back({400, 600});
+    c_ramp->is_static = true;
+    c_ramp->parent = nullptr;
+    c_ramp->type = POLYGON;
+    c_ramp->polygon = ramp;
+    c_ramp->rotation_static = false;
+    //Collision::add_collider(c_ramp);
     
     c2 = new Body(MOCK);
     c2->is_static = false;
@@ -204,7 +222,8 @@ int main(void)
     c_octogon->type = POLYGON;
     c_octogon->polygon = octogon;
     Collision::add_collider(c_octogon);
-    
+
+    c2->angular_velocity += 100;
     
     Player player({300, 100}, 100, 100);
     MemoryManager::get_usage();
@@ -231,23 +250,24 @@ int main(void)
         store.update();
         debug_submenu.update();
         menu.update();
+        
+        player.update();
         //-------------------------------------------------------------------------------------
         
         // Run Fixed Updates
         //-------------------------------------------------------------------------------------
         if( fixed_update_accumulator >= fixed_update_interval && !PAUSE)
         {
-            player.update();
             store.update_fixed();
             debug_submenu.update_fixed();
             menu.update_fixed();
-            
-            c2->rotate(2);
+
+                c2->angular_velocity = -75;
             
             fixed_update_accumulator -= fixed_update_interval;
         }
         //-------------------------------------------------------------------------------------
-        Collision::update();
+        Collision::update(1);
         Collision::draw_debug();
         // Draw
         //-------------------------------------------------------------------------------------
