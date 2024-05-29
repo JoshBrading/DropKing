@@ -17,54 +17,39 @@ Player::Player(const Vector2 position, const int width, const int height)
     this->polygon = new Polygon();
     this->polygon->origin = position;
     this->polygon->points.push_back( Vector2Add(position, {-offset.x, -offset.y}) );
-    this->polygon->points.push_back( Vector2Add(position, { 15,  -80}) );
     this->polygon->points.push_back( Vector2Add(position, { offset.x, -offset.y}) ); 
-    this->polygon->points.push_back( Vector2Add(position, { 70,  20}) );
     this->polygon->points.push_back( Vector2Add(position, { offset.x,  offset.y}) );
-    this->polygon->points.push_back( Vector2Add(position, { 20,  70}) );
     this->polygon->points.push_back( Vector2Add(position, {-offset.x,  offset.y}) );
-    this->polygon->points.push_back( Vector2Add(position, { -70,  20}) );
     
     c1 = new Body(polygon);
     c1->is_static = false;
     c1->parent = nullptr;
     c1->type = POLYGON;
     c1->polygon = polygon;
-    c1->width = 100;
-    c1->height = 100;
+    c1->width = width * 10;
+    c1->height = height * 10;
     c1->mass = 100.0f;
-    c1->restitution = 0.5f;
     c1->calculate_rotational_inertia();
     Collision::add_collider(c1);
-    
-    poly = new Polygon();
-    poly->origin = {400, 400};
-    poly->points.push_back({300, 300});
-    poly->points.push_back({500, 300});
-    poly->points.push_back({500, 500});
-    poly->points.push_back({300, 500});
 
-    c3 = new Body(poly);
+    poly2 = new Polygon();
+    poly2->origin = {200, 210};
+    poly2->points.push_back({0, 0});
+    poly2->points.push_back({0, 20});
+    poly2->points.push_back({400, 420});
+    poly2->points.push_back({400, 400});
+    c3 = new Body(poly2);
     c3->is_static = true;
     c3->parent = nullptr;
     c3->type = POLYGON;
-    c3->polygon = poly;
+    c3->polygon = poly2;
+    c3->width = 400;
     c3->rotation_static = true;
+    c3->height = 20;
+    c3->mass = 100.0f;
+    c3->restitution = 0.5f;
+    c3->calculate_rotational_inertia();
     Collision::add_collider(c3);
-
-    poly2 = new Polygon();
-    poly2->origin = {900, 400};
-    poly2->points.push_back({800, -200});
-    poly2->points.push_back({900, -200});
-    poly2->points.push_back({900, 1000});
-    poly2->points.push_back({800, 1000});
-
-    c32 = new Body(poly2);
-    c32->is_static = true;
-    c32->parent = nullptr;
-    c32->type = POLYGON;
-    c32->polygon = poly2;
-    //Collision::add_collider(c32);
 }
 
 
@@ -91,6 +76,14 @@ void Player::update()
     if( IsKeyDown(KEY_SPACE))
         c1->apply_force({0, -50});
 
+    //Jump
+    if( IsKeyDown(KEY_SPACE))
+    {
+        //c1->apply_force({0, -5000000.0f});
+        //if(IsKeyReleased(KEY_SPACE))
+            c1->apply_force({0, -5000000.0f});
+    }
+
     if( IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
     {
         Polygon* square = new Polygon();
@@ -115,10 +108,6 @@ void Player::update()
 
     Vector2 offset = Vector2Subtract(position, polygon->origin);
     c1->translate(offset);
-    //c3->rotate(-180 * GetFrameTime());
-    //c3->angular_velocity = 10;
-   // c32->angular_velocity = -150;
-
 }
 
 
@@ -132,6 +121,7 @@ void Player::draw()
     DrawLine(polygon->origin.x, polygon->origin.y, position.x, position.y, RED);
     DrawCircle(position.x, position.y, 5, SKYBLUE);
 
-    
+    const char* velocity = TextFormat("Velocity X: %f Y: %f", c1->velocity.x, c1->velocity.y);
+    DrawText(velocity, 10, 10, 20, RED);
 
 }

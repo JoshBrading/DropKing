@@ -35,7 +35,7 @@ struct Body
     float mass = 20.0f;
     float inertia = 0;
     float restitution = 0.5f;
-    float friction = 0.5f;
+    float friction = 100.0f;
     float friction_ramp = 0.75f;
     Vector2 velocity = {0, 0};
     float angular_velocity = 0;
@@ -55,6 +55,7 @@ struct Body
     float calculate_rotational_inertia();
     void translate(Vector2 translation) const;
     void apply_force(Vector2 force);
+    void apply_impulse(Vector2 impulse);
 };
 
 struct CollisionData
