@@ -26,9 +26,6 @@
     <ClCompile Include="src\game_tile.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\menu.cpp" />
-    <ClCompile Include="src\PhysicsBody.cpp" />
-    <ClCompile Include="src\PhysicsCollision.cpp" />
-    <ClCompile Include="src\PhysicsWorld.cpp" />
     <ClCompile Include="src\player.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -117,11 +114,6 @@
     <ClInclude Include="include\game_tile.h" />
     <ClInclude Include="include\mem.h" />
     <ClInclude Include="include\menu.h" />
-    <ClInclude Include="include\PhysicsBody.h" />
-    <ClInclude Include="include\PhysicsCollision.h" />
-    <ClInclude Include="include\PhysicsPolygon.h" />
-    <ClInclude Include="include\PhysicsTransform.h" />
-    <ClInclude Include="include\PhysicsWorld.h" />
     <ClInclude Include="include\player.h" />
     <ClInclude Include="include\projectile.h" />
     <ClInclude Include="include\transform.h" />
