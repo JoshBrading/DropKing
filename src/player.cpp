@@ -1,12 +1,15 @@
 ﻿#include "player.h"
 #include <raymath.h>
 
+#include "PhysicsWorld.h"
+
 Polygon* poly;
 Polygon* poly2;
 Body* c1;
 Body* c3;
 Body* c32;
-
+Physics::Body test;
+Physics::Body test2;
 Player::Player(const Vector2 position, const int width, const int height)
 {
     this->position = position;
@@ -20,7 +23,7 @@ Player::Player(const Vector2 position, const int width, const int height)
     this->polygon->points.push_back( Vector2Add(position, { offset.x, -offset.y}) ); 
     this->polygon->points.push_back( Vector2Add(position, { offset.x,  offset.y}) );
     this->polygon->points.push_back( Vector2Add(position, {-offset.x,  offset.y}) );
-    
+    /*
     c1 = new Body(polygon);
     c1->is_static = false;
     c1->parent = nullptr;
@@ -49,7 +52,17 @@ Player::Player(const Vector2 position, const int width, const int height)
     c3->mass = 100.0f;
     c3->restitution = 0.5f;
     c3->calculate_rotational_inertia();
-    Collision::add_collider(c3);
+    Collision::add_collider(c3);*/
+    
+    std::string s;
+    Physics::BodyFactory::create_box_body(width, height, 10.0f, false, 0.8f, test, s);
+    Physics::Instance::WORLD.add_body(&test);
+    test.set_position(position);
+
+    Physics::BodyFactory::create_box_body(width * 4, height, 10.0f, true, 0.8f, test2, s);
+    test2.is_static = true;
+    test2.set_position({600, 210});
+    Physics::Instance::WORLD.add_body(&test2);
 }
 
 
@@ -86,28 +99,14 @@ void Player::update()
 
     if( IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
     {
-        Polygon* square = new Polygon();
-        Body* square_c = new Body(square);
-        square->origin = GetMousePosition();
-        square->points.push_back({square->origin.x - 10, square->origin.y -10});
-        square->points.push_back({square->origin.x + 10, square->origin.y -10});
-        square->points.push_back({square->origin.x + 10, square->origin.y +10});
-        square->points.push_back({square->origin.x - 10, square->origin.y +10});
-        square_c->is_static = false;
-        square_c->parent = nullptr;
-        square_c->type = POLYGON;
-        square_c->polygon = square;
-        square_c->width = 20;
-        square_c->height = 20;
-        square_c->mass = 100.0f;
-        square_c->restitution = 0.8f;
-        square_c->calculate_rotational_inertia();
-        Collision::add_collider(square_c);
         
+        //Physics::Body* test = new Physics::Body(1.0f, 1.0f, 1.0f, 0.5f, 1.0f, false, 10, 10, 10, this->polygon->points, Physics::BOX);
+
     }
 
-    Vector2 offset = Vector2Subtract(position, polygon->origin);
-    c1->translate(offset);
+    //Vector2 offset = Vector2Subtract(position, polygon->origin);
+    //c1->translate(offset);
+    Physics::Instance::WORLD.update(GetFrameTime(), 20);
 }
 
 
@@ -121,7 +120,17 @@ void Player::draw()
     DrawLine(polygon->origin.x, polygon->origin.y, position.x, position.y, RED);
     DrawCircle(position.x, position.y, 5, SKYBLUE);
 
-    const char* velocity = TextFormat("Velocity X: %f Y: %f", c1->velocity.x, c1->velocity.y);
-    DrawText(velocity, 10, 10, 20, RED);
+    DrawCircle(test.get_position().x, test.get_position().y, 5, SKYBLUE);
+    const char* testpost = TextFormat("Test Position X: %f Y: %f", test.get_position().x, test.get_position().y);
+    DrawText(testpost, 10, 10, 20, RED);
+    for( int i = 0; i < test.get_transformed_vertices().size(); i++ )
+    {
+        DrawLine(test.get_position().x, test.get_position().y, test.get_transformed_vertices()[i].x, test.get_transformed_vertices()[i].y, BLUE);
+        DrawLine(test.get_transformed_vertices()[i].x, test.get_transformed_vertices()[i].y, test.get_transformed_vertices()[(i + 1) % test.get_transformed_vertices().size()].x, test.get_transformed_vertices()[(i + 1) % test.get_transformed_vertices().size()].y, SKYBLUE);
+    }
+    //const char* velocity = TextFormat("Velocity X: %f Y: %f", c1->velocity.x, c1->velocity.y);
+    //DrawText(velocity, 10, 10, 20, RED);
+
+    
 
 }
