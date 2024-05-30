@@ -128,8 +128,6 @@ void Player::draw()
         DrawLine(test.get_position().x, test.get_position().y, test.get_transformed_vertices()[i].x, test.get_transformed_vertices()[i].y, BLUE);
         DrawLine(test.get_transformed_vertices()[i].x, test.get_transformed_vertices()[i].y, test.get_transformed_vertices()[(i + 1) % test.get_transformed_vertices().size()].x, test.get_transformed_vertices()[(i + 1) % test.get_transformed_vertices().size()].y, SKYBLUE);
     }
-    //const char* velocity = TextFormat("Velocity X: %f Y: %f", c1->velocity.x, c1->velocity.y);
-    //DrawText(velocity, 10, 10, 20, RED);
 
     
 
