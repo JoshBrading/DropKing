@@ -15,7 +15,7 @@ namespace Physics
         inline int NO_TRANSFORM_COUNT = 0;
 
         inline float MIN_BODY_SIZE = 0.01f * 0.01f;
-        inline float MAX_BODY_SIZE = 64.0f * 64.0f;
+        inline float MAX_BODY_SIZE = INFINITY;
 
         inline float MIN_DENSITY = 0.5f;
         inline float MAX_DENSITY = 21.4f;

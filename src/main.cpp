@@ -47,7 +47,7 @@ int main(void)
     SetShaderValue(shader, ambientLoc, ambient, SHADER_UNIFORM_VEC4);
 
     
-    SetTargetFPS(0);
+    SetTargetFPS(60);
     // Create lights
     /*Light lights[MAX_LIGHTS] = {};
     lights[0] = CreateLight(LIGHT_POINT, { -2, 1, -2 }, Vector3Zero(), YELLOW, shader);
@@ -225,7 +225,7 @@ int main(void)
 
     c2->angular_velocity += 100;
     
-    Player player({300, 100}, 100, 100);
+    Player player({300, 0}, 100, 100);
     MemoryManager::get_usage();
     while (!SHOULD_CLOSE) // Main game loop
     {

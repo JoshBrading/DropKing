@@ -89,12 +89,13 @@ namespace Physics
     {
         if(transform_update_required)
         {
+            transformed_vertices.clear();
             Transform t = Transform(position, angle);
 
             for(int i = 0; i < vertices.size(); i++)
             {
                 Vector2 v = vertices[i];
-                transformed_vertices[i] = transform_vector(v, t);
+                transformed_vertices.push_back(transform_vector(v, t));
             }
 
             WorldSettings::TRANSFORM_COUNT++;
@@ -110,6 +111,19 @@ namespace Physics
 
     void Body::update(float time, Vector2 gravity, const int iterations)
     {
+        
+        DrawCircle(position.x, position.y, 5, BLUE);
+        for(int i = 0; i < vertices.size(); i++)
+        {
+            DrawLineEx(vertices[i], vertices[(i + 1) % vertices.size()], 2, RED);
+        }
+        
+        std::vector<Vector2> transformed_vertices = get_transformed_vertices();
+        for( int i = 0; i < transformed_vertices.size(); i++ )
+        {
+            DrawLineEx(transformed_vertices[i], transformed_vertices[(i + 1) % transformed_vertices.size()], 2, GREEN);
+        }
+        
         if(is_static)
         {
             return;
@@ -122,7 +136,8 @@ namespace Physics
 
         //FlatVector acceleration = force / Mass;
         //linearVelocity += acceleration * time;
-        
+
+        gravity = Vector2Scale(gravity, 3);
         linear_velocity = Vector2Add(linear_velocity, Vector2Scale(gravity, time));
         position = Vector2Add(position, Vector2Scale(linear_velocity, time));
 
@@ -130,6 +145,7 @@ namespace Physics
 
         force = {0, 0};
         transform_update_required = true;
+
     }
 
     void Body::translate(Vector2 amount)
@@ -217,10 +233,10 @@ namespace Physics
 
         restitution = std::ranges::clamp(restitution, 0.0f, 1.0f);
 
-        float mass = 0.0f;
+        float mass = 1.0f;
         float inertia = 0.0f;
 
-        if (!is_static)
+        if (true)
         {
             // mass = area * depth * density
             mass = area * density;

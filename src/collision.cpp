@@ -789,6 +789,7 @@ void Collision::i_update(int substeps)
 
 void Collision::i_draw_debug() const
 {
+    return;
     for (const auto& collider : colliders)
     {
         if (collider->type == POLYGON)

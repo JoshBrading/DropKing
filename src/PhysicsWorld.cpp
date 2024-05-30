@@ -70,7 +70,7 @@ namespace Physics
         Vector2 normal = contact.normal;
         Vector2 contact1 = contact.contact1;
         Vector2 contact2 = contact.contact2;
-        int contactCount = contact.contact_count;
+        int contact_count = contact.contact_count;
 
         float e = std::min(body_a->restitution, body_b->restitution);
 
@@ -80,7 +80,7 @@ namespace Physics
         contact_list[0] = contact1;
         contact_list[1] = contact2;
 
-        for (int i = 0; i < contactCount; i++)
+        for (int i = 0; i < contact_count; i++)
         {
             impulse_list[i] = {0, 0};
             ra_list[i] = {0, 0};
@@ -89,7 +89,7 @@ namespace Physics
             j_list[i] = 0.0f;
         }
 
-        for (int i = 0; i < contactCount; i++)
+        for (int i = 0; i < contact_count; i++)
         {
             Vector2 ra = Vector2Subtract(contact_list[i], body_a->get_position());
             Vector2 rb = Vector2Subtract(contact_list[i], body_b->get_position());
@@ -123,7 +123,7 @@ namespace Physics
 
             float j = -(1.0f + e) * contact_velocity_mag;
             j /= denom;
-            j /= (float)contactCount;
+            j /= (float)contact_count;
 
             j_list[i] = j;
 
@@ -131,24 +131,26 @@ namespace Physics
             impulse_list[i] = impulse;
         }
 
-        for (int i = 0; i < contactCount; i++)
+        for (int i = 0; i < contact_count; i++)
         {
             Vector2 impulse = impulse_list[i];
             Vector2 ra = ra_list[i];
             Vector2 rb = rb_list[i];
 
-            body_a->set_linear_velocity(Vector2Add(body_a->get_linear_velocity(),
-                                                  Vector2Scale(impulse, -body_a->inverse_mass)));
-            body_a->set_angular_velocity(
-                body_a->get_angular_velocity() + ((ra.x * impulse.y) - (ra.y * impulse.x) * -body_a->inverse_inertia));
+            body_a->set_linear_velocity(Vector2Add(body_a->get_linear_velocity(), Vector2Scale(impulse, -body_a->inverse_mass)));
+            auto angular_velocity = body_a->get_angular_velocity();
+            float cross = (ra.x * impulse.y) - (ra.y * impulse.x);
+            float new_velocity = angular_velocity + cross * -body_a->inverse_inertia;
+            body_a->set_angular_velocity(new_velocity);
 
-            body_b->set_linear_velocity(Vector2Add(body_b->get_linear_velocity(),
-                                                  Vector2Scale(impulse, body_b->inverse_mass)));
-            body_b->set_angular_velocity(
-                body_b->get_angular_velocity() + ((rb.x * impulse.y) - (rb.y * impulse.x) * body_b->inverse_inertia));
+            body_b->set_linear_velocity(Vector2Add(body_b->get_linear_velocity(), Vector2Scale(impulse, body_b->inverse_mass)));
+            angular_velocity = body_b->get_angular_velocity();
+            cross = (rb.x * impulse.y) - (rb.y * impulse.x);
+            new_velocity = angular_velocity + cross * body_b->inverse_inertia;
+            body_b->set_angular_velocity(new_velocity);
         }
 
-        for (int i = 0; i < contactCount; i++)
+        for (int i = 0; i < contact_count; i++)
         {
             Vector2 ra = Vector2Subtract(contact_list[i], body_a->get_position());
             Vector2 rb = Vector2Subtract(contact_list[i], body_b->get_position());
@@ -188,7 +190,7 @@ namespace Physics
 
             float jt = -Vector2DotProduct(relative_velocity, tangent);
             jt /= denom;
-            jt /= (float)contactCount;
+            jt /= (float)contact_count;
 
             Vector2 friction_impulse;
             float j = j_list[i];
@@ -205,22 +207,23 @@ namespace Physics
             friction_impulse_list[i] = friction_impulse;
         }
 
-        for (int i = 0; i < contactCount; i++)
+        for (int i = 0; i < contact_count; i++)
         {
             Vector2 frictionImpulse = friction_impulse_list[i];
             Vector2 ra = ra_list[i];
             Vector2 rb = rb_list[i];
 
-            body_a->set_linear_velocity(Vector2Add(body_a->get_linear_velocity(),
-                                                  Vector2Scale(frictionImpulse, -body_a->inverse_mass)));
-            body_a->set_angular_velocity(
-                body_a->get_angular_velocity() + ((ra.x * frictionImpulse.y) - (ra.y * frictionImpulse.x) * -body_a->
-                    inverse_inertia));
-            body_b->set_linear_velocity(Vector2Add(body_b->get_linear_velocity(),
-                                                  Vector2Scale(frictionImpulse, body_b->inverse_mass)));
-            body_b->set_angular_velocity(
-                body_b->get_angular_velocity() + ((rb.x * frictionImpulse.y) - (rb.y * frictionImpulse.x) * body_b->
-                    inverse_inertia));
+            body_a->set_linear_velocity(Vector2Add(body_a->get_linear_velocity(), Vector2Scale(frictionImpulse, -body_a->inverse_mass)));
+            float angular_velocity = body_a->get_angular_velocity();
+            float cross = (ra.x * frictionImpulse.y) - (ra.y * frictionImpulse.x);
+            float new_velocity = angular_velocity + cross * -body_a->inverse_inertia;
+            body_a->set_angular_velocity(new_velocity);
+
+            body_b->set_linear_velocity(Vector2Add(body_b->get_linear_velocity(), Vector2Scale(frictionImpulse, body_b->inverse_mass)));
+            angular_velocity = body_b->get_angular_velocity();
+            cross = (rb.x * frictionImpulse.y) - (rb.y * frictionImpulse.x);
+            new_velocity = angular_velocity + cross * body_b->inverse_inertia;
+            body_b->set_angular_velocity(new_velocity);
         }
     }
 

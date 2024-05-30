@@ -8,8 +8,13 @@ Polygon* poly2;
 Body* c1;
 Body* c3;
 Body* c32;
+
+std::string s;
+
 Physics::Body test;
 Physics::Body test2;
+Physics::Body test3;
+
 Player::Player(const Vector2 position, const int width, const int height)
 {
     this->position = position;
@@ -54,15 +59,19 @@ Player::Player(const Vector2 position, const int width, const int height)
     c3->calculate_rotational_inertia();
     Collision::add_collider(c3);*/
     
-    std::string s;
     Physics::BodyFactory::create_box_body(width, height, 10.0f, false, 0.8f, test, s);
     Physics::Instance::WORLD.add_body(&test);
     test.set_position(position);
 
     Physics::BodyFactory::create_box_body(width * 4, height, 10.0f, true, 0.8f, test2, s);
-    test2.is_static = true;
-    test2.set_position({600, 210});
     Physics::Instance::WORLD.add_body(&test2);
+    test2.set_position({300, 100});
+    test2.set_rotation(120);
+
+    Physics::BodyFactory::create_box_body(width * 6, height, 10.0f, true, 0.8f, test3, s);
+    Physics::Instance::WORLD.add_body(&test3);
+    test3.set_position({650, 350});
+    test3.set_rotation(-45);
 }
 
 
@@ -120,14 +129,10 @@ void Player::draw()
     DrawLine(polygon->origin.x, polygon->origin.y, position.x, position.y, RED);
     DrawCircle(position.x, position.y, 5, SKYBLUE);
 
-    DrawCircle(test.get_position().x, test.get_position().y, 5, SKYBLUE);
     const char* testpost = TextFormat("Test Position X: %f Y: %f", test.get_position().x, test.get_position().y);
     DrawText(testpost, 10, 10, 20, RED);
-    for( int i = 0; i < test.get_transformed_vertices().size(); i++ )
-    {
-        DrawLine(test.get_position().x, test.get_position().y, test.get_transformed_vertices()[i].x, test.get_transformed_vertices()[i].y, BLUE);
-        DrawLine(test.get_transformed_vertices()[i].x, test.get_transformed_vertices()[i].y, test.get_transformed_vertices()[(i + 1) % test.get_transformed_vertices().size()].x, test.get_transformed_vertices()[(i + 1) % test.get_transformed_vertices().size()].y, SKYBLUE);
-    }
+
+    DrawText(s.c_str(), 10, 30, 20, RED);
 
     
 

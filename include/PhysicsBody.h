@@ -45,8 +45,8 @@ namespace Physics
         float radius;
         float width;
         float height;
-        float static_friction;
-        float dynamic_friction;
+        float static_friction = 0.5f;
+        float dynamic_friction = 0.7f;
 
     private:
         std::vector<Vector2> vertices;
