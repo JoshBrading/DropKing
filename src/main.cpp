@@ -1,58 +1,32 @@
 #include <format>
 #include <raylib.h>
-#include <raymath.h>
-#include "collision.h"
-#include "entity.h"
 #include "entity_manager.h"
 #include "mem.h"
 #include "menu.h"
-
-#define RLIGHTS_IMPLEMENTATION
-#include <rlights.h>
-
 #include <chipmunk/chipmunk.h>
 
-#include "player.h"
+#include "physics.h"
 
-enum shapeType
-{
-    s_circle = 0,
-    s_box = 1
-};
-
-typedef struct phys
-{
-    enum shapeType type;
-    Vector2 size;
-    cpBody* body;
-    cpShape* shape;
-    bool sharedBody;
-} phys;
-
-#define MaxObj 40
-phys Obj[MaxObj];
-cpSpace* space;
+std::vector<Physics::Object> OBJECTS;
 
 cpConstraint* makePivot(int o, cpVect pos)
 {
-    Obj[o].type = s_box;
-    Obj[o].size = {96, 8};
-    Obj[o].body = cpSpaceAddBody(space, cpBodyNew(0, 0));
-    Obj[o].sharedBody = false;
-    Obj[o].shape = cpSpaceAddShape(space, cpBoxShapeNew(Obj[o].body, Obj[o].size.x, Obj[o].size.y, 0.0));
-    cpShapeSetFriction(Obj[o].shape, 0.6);
-    cpShapeSetMass(Obj[o].shape, 8);
+    OBJECTS[o].type = Physics::Shapes::BOX;
+    OBJECTS[o].size = {96, 8};
+    OBJECTS[o].body = cpSpaceAddBody(Physics::Instances::SPACE, cpBodyNew(0, 0));
+    OBJECTS[o].shape = cpSpaceAddShape(Physics::Instances::SPACE, cpBoxShapeNew(OBJECTS[o].body, OBJECTS[o].size.x, OBJECTS[o].size.y, 0.0));
+    cpShapeSetFriction(OBJECTS[o].shape, 0.6);
+    cpShapeSetMass(OBJECTS[o].shape, 8);
 
-    Obj[o + 1].type = s_box;
-    Obj[o + 1].size = {8, 96};
-    Obj[o + 1].body = Obj[o].body;
-    Obj[o + 1].sharedBody = true;
-    Obj[o + 1].shape = cpSpaceAddShape(space, cpBoxShapeNew(Obj[o].body, Obj[o + 1].size.x, Obj[o + 1].size.y, 0.0));
-    cpShapeSetFriction(Obj[o + 1].shape, 0.6);
-    cpShapeSetMass(Obj[o + 1].shape, 8);
+    OBJECTS[o + 1].type = Physics::Shapes::BOX;
+    OBJECTS[o + 1].size = {8, 96};
+    OBJECTS[o + 1].body = OBJECTS[o].body;
+    OBJECTS[o + 1].shape = cpSpaceAddShape(Physics::Instances::SPACE, cpBoxShapeNew(OBJECTS[o].body, OBJECTS[o + 1].size.x, OBJECTS[o + 1].size.y, 0.0));
+    cpShapeSetFriction(OBJECTS[o + 1].shape, 0.6);
+    cpShapeSetMass(OBJECTS[o + 1].shape, 8);
 
-    cpBodySetPosition(Obj[o].body, pos);
-    return cpSpaceAddConstraint(space, cpPivotJointNew(Obj[o].body, cpSpaceGetStaticBody(space), pos));
+    cpBodySetPosition(OBJECTS[o].body, pos);
+    return cpSpaceAddConstraint(Physics::Instances::SPACE, cpPivotJointNew(OBJECTS[o].body, cpSpaceGetStaticBody(Physics::Instances::SPACE), pos));
 }
 
 void postSolve(cpArbiter* arb, cpSpace* space, cpDataPointer data)
@@ -80,8 +54,8 @@ int main(void)
 {
     // Init window
     //SetConfigFlags(FLAG_VSYNC_HINT); 
-    constexpr int screen_width = 1280;
-    constexpr int screen_height = 720;
+    constexpr int screen_width = 720;
+    constexpr int screen_height = 1000;
     InitWindow(screen_width, screen_height, "DropKing - [raylib]");
     SetExitKey(KEY_NULL);
 
@@ -162,49 +136,45 @@ int main(void)
     bool dragging = false;
 
     cpVect gravity = cpv(0, 98);
-    space = cpSpaceNew();
-    cpSpaceSetGravity(space, gravity);
+    cpSpaceSetGravity(Physics::Instances::SPACE, gravity);
 
-    cpCollisionHandler* handler = cpSpaceAddCollisionHandler(space, 0, 0);
+    cpCollisionHandler* handler = cpSpaceAddCollisionHandler(Physics::Instances::SPACE, 0, 0);
     handler->postSolveFunc = (cpCollisionPostSolveFunc)postSolve;
 
-    cpShape* slope = cpSegmentShapeNew(cpSpaceGetStaticBody(space), cpv(120, 400), cpv(1160, 800), 0);
+    cpShape* slope = cpSegmentShapeNew(cpSpaceGetStaticBody(Physics::Instances::SPACE), cpv(120, 400), cpv(1160, 800), 0);
     cpShapeSetFriction(slope, .8);
-    cpSpaceAddShape(space, slope);
+    cpSpaceAddShape(Physics::Instances::SPACE, slope);
 
 
-    for (int n = 6; n < MaxObj; n++)
+
+    for (int n = 0; n < Physics::MAX_OBJECTS; n++)
     {
         cpFloat mass;
+        Physics::Object obj;
         if (n % 2)
         {
-            Obj[n].type = s_box;
-            Obj[n].size.x = GetRandomValue(24, 48);
-            Obj[n].size.y = GetRandomValue(24, 48);
-            mass = (Obj[n].size.x * Obj[n].size.y) * 0.001;
-            Obj[n].body = cpSpaceAddBody(space, cpBodyNew(mass, cpMomentForBox(mass, Obj[n].size.x, Obj[n].size.y)));
-            Obj[n].sharedBody = false;
-            Obj[n].shape = cpSpaceAddShape(space, cpBoxShapeNew(Obj[n].body, Obj[n].size.x, Obj[n].size.y, 0.0));
-            cpShapeSetFriction(Obj[n].shape, 0.4);
+            obj = Physics::create_square({(float)GetRandomValue(12, 48), (float)GetRandomValue(12, 14)}, {(float)GetRandomValue(48, 48), (float)GetRandomValue(48, 48)});
+            cpShapeSetFriction(obj.shape, 0.4);
+            OBJECTS.push_back(obj);
         }
         else
         {
-            Obj[n].type = s_circle;
-            Obj[n].size.x = GetRandomValue(12, 24);
-            mass = (PI * (Obj[n].size.x * Obj[n].size.x)) * 0.001;
-            Obj[n].body = cpSpaceAddBody(space, cpBodyNew(mass, cpMomentForCircle(mass, 0, Obj[n].size.x, cpvzero)));
-            Obj[n].sharedBody = false;
-            Obj[n].shape = cpSpaceAddShape(space, cpCircleShapeNew(Obj[n].body, Obj[n].size.x, cpvzero));
-            cpShapeSetFriction(Obj[n].shape, 0.7);
+            obj.type = Physics::Shapes::CIRCLE;
+            obj.size.x = GetRandomValue(12, 24);
+            OBJECTS.push_back(obj);
+            mass = (PI * (OBJECTS.back().size.x * OBJECTS.back().size.x)) * 0.001;
+            OBJECTS.back().body = cpSpaceAddBody(Physics::Instances::SPACE, cpBodyNew(mass, cpMomentForCircle(mass, 0, OBJECTS.back().size.x, cpvzero)));
+            OBJECTS.back().shape = cpSpaceAddShape(Physics::Instances::SPACE, cpCircleShapeNew(OBJECTS.back().body, OBJECTS.back().size.x, cpvzero));
+            cpShapeSetFriction(OBJECTS.back().shape, 0.7);
         }
-        cpBodySetPosition(Obj[n].body, cpv(GetRandomValue(120, 1160), GetRandomValue(400, 500)));
+        cpBodySetPosition(OBJECTS.back().body, cpv(GetRandomValue(120, 1160), GetRandomValue(400, 500)));
     }
 
     cpConstraint* joints[3];
 
-    joints[0] = makePivot(0, {300, 300});
-    joints[1] = makePivot(2, {450, 300});
-    joints[2] = makePivot(4, {600, 300});
+    //joints[0] = makePivot(0, {300, 300});
+    //joints[1] = makePivot(2, {450, 300});
+    //joints[2] = makePivot(4, {600, 300});
 
 
     //Player player({300, 0}, 100, 100);
@@ -244,13 +214,13 @@ int main(void)
 
         frame++;
 
-        cpSpaceStep(space, 1.0 / 60.0);
+        cpSpaceStep(Physics::Instances::SPACE, 1.0 / 60.0);
 
         // fake joint friction
         const float drag = 0.999;
-        cpBodySetAngularVelocity(Obj[0].body, cpBodyGetAngularVelocity(Obj[0].body) * drag);
-        cpBodySetAngularVelocity(Obj[2].body, cpBodyGetAngularVelocity(Obj[2].body) * drag);
-        cpBodySetAngularVelocity(Obj[4].body, cpBodyGetAngularVelocity(Obj[4].body) * drag);
+        //cpBodySetAngularVelocity(OBJECTS[0].body, cpBodyGetAngularVelocity(OBJECTS[0].body) * drag);
+        //cpBodySetAngularVelocity(OBJECTS[2].body, cpBodyGetAngularVelocity(OBJECTS[2].body) * drag);
+        //cpBodySetAngularVelocity(OBJECTS[4].body, cpBodyGetAngularVelocity(OBJECTS[4].body) * drag);
 
 
         lastMouse = mouse;
@@ -286,26 +256,26 @@ int main(void)
 
         BeginMode2D(camera);
         // TODO should get shape offset...
-        for (int n = 0; n < MaxObj; n++)
+        for (int n = 0; n < OBJECTS.size(); n++)
         {
-            cpVect pos = cpBodyGetPosition(Obj[n].body);
-            float a = cpBodyGetAngle(Obj[n].body);
-            if (Obj[n].type == s_circle)
+            cpVect pos = cpBodyGetPosition(OBJECTS[n].body);
+            float a = cpBodyGetAngle(OBJECTS[n].body);
+            if (OBJECTS[n].type == Physics::Shapes::CIRCLE)
             {
-                cpFloat r = cpCircleShapeGetRadius(Obj[n].shape);
+                cpFloat r = cpCircleShapeGetRadius(OBJECTS[n].shape);
                 DrawCircle(pos.x, pos.y, r, WHITE);
                 DrawLine(pos.x, pos.y,
-                         pos.x + cos(a) * Obj[n].size.x, pos.y + sin(a) * Obj[n].size.x,BLUE);
+                         pos.x + cos(a) * OBJECTS[n].size.x, pos.y + sin(a) * OBJECTS[n].size.x,BLUE);
             }
             else
             {
-                DrawRectanglePro({(float)pos.x, (float)pos.y, Obj[n].size.x, Obj[n].size.y},
-                                 {Obj[n].size.x / 2, Obj[n].size.y / 2},
-                                 cpBodyGetAngle(Obj[n].body) * RAD2DEG,RED);
+                Rectangle rect = {(float)pos.x, (float)pos.y, OBJECTS[n].size.x, OBJECTS[n].size.y};
+                DrawRectanglePro(rect, {OBJECTS[n].size.x / 2, OBJECTS[n].size.y / 2},
+                                 cpBodyGetAngle(OBJECTS[n].body) * RAD2DEG,RED);
                 Vector2 p[4] = {0};
                 Vector2 sz;
-                sz.x = Obj[n].size.x / 2.0;
-                sz.y = Obj[n].size.y / 2.0;
+                sz.x = OBJECTS[n].size.x / 2.0;
+                sz.y = OBJECTS[n].size.y / 2.0;
                 p[0] = {-sz.x, -sz.y};
                 p[1] = {sz.x, -sz.y};
                 p[2] = {sz.x, sz.y};
@@ -327,8 +297,8 @@ int main(void)
 
             if (pos.y > screen_height + 200)
             {
-                cpBodySetPosition(Obj[n].body, cpv(GetRandomValue(220, 520), GetRandomValue(100, 250)));
-                cpBodySetVelocity(Obj[n].body, cpvzero);
+                cpBodySetPosition(OBJECTS[n].body, cpv(GetRandomValue(220, 520), GetRandomValue(100, 250)));
+                cpBodySetVelocity(OBJECTS[n].body, cpvzero);
             }
         }
 
