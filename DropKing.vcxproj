@@ -228,14 +228,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\maste\OneDrive\Desktop\Code\Games\DropKing\include;C:\Users\maste\OneDrive\Desktop\Code\Games\raylib\out\build\x64-Debug\raylib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\maste\OneDrive\Desktop\Code\Games\DropKing\include;C:\Users\maste\OneDrive\Desktop\Code\Games\raylib\out\build\x64-Debug\raylib\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\maste\OneDrive\Desktop\Code\Games\raylib\out\build\x64-Debug\raylib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>raylib.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\maste\OneDrive\Desktop\Code\Games\DropKing;C:\Users\maste\OneDrive\Desktop\Code\Games\raylib\out\build\x64-Debug\raylib;C:\Users\maste\OneDrive\Desktop\Code\Games\Chipmunk2D\src\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>raylib.lib;winmm.lib;chipmunk.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -247,7 +247,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\maste\OneDrive\Desktop\Code\Games\DropKing\include;C:\Users\maste\OneDrive\Desktop\Code\Games\raylib\out\build\x64-Debug\raylib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\maste\OneDrive\Desktop\Code\Games\DropKing\include;C:\Users\maste\OneDrive\Desktop\Code\Games\raylib\out\build\x64-Debug\raylib\include;C://Users/maste/OneDrive/Desktop/Code/Games/box2d-2.4.1/include/box2d</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
