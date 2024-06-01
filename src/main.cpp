@@ -1,5 +1,7 @@
 #include <format>
 #include <raylib.h>
+#include <raymath.h>
+
 #include "entity_manager.h"
 #include "mem.h"
 #include "menu.h"
@@ -49,6 +51,7 @@ bool DEBUG_FOOTER = false;
 bool SHOULD_CLOSE = false;
 bool PAUSE = false;
 
+int SCORE = 0;
 
 int main(void)
 {
@@ -61,7 +64,7 @@ int main(void)
 
     Camera2D camera = {0};
     //camera.target = {screen_width / 2.0, screen_height / 2.0};
-    camera.offset = {0, 0};
+    camera.offset = {screen_width / 2, screen_height / 2};
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
 
@@ -148,31 +151,31 @@ int main(void)
     platform->tag = Physics::ObjectDetails::GROUND;
     
     cpBody* left_body = cpSpaceGetStaticBody(Physics::Instances::SPACE);
-    cpShape* left = cpSegmentShapeNew(left_body, cpv(120, 400), cpv(120, 400 * 40), 0);
+    cpShape* left = cpSegmentShapeNew(left_body, cpv(-500, 400), cpv(-500, 400 * 40), 0);
     cpShapeSetUserData(left, walls);
     cpShapeSetFriction(left, 0.8);
     cpSpaceAddShape(Physics::Instances::SPACE, left);
     
     cpBody* right_body = cpSpaceGetStaticBody(Physics::Instances::SPACE);
-    cpShape* right = cpSegmentShapeNew(right_body, cpv(1000, 400), cpv(1000, 400 * 40), 0);
+    cpShape* right = cpSegmentShapeNew(right_body, cpv(500, 400), cpv(500, 400 * 40), 0);
     cpShapeSetUserData(right, walls);
     cpShapeSetFriction(right, 0.8);
     cpSpaceAddShape(Physics::Instances::SPACE, right);
         
     cpBody* platform1 = cpSpaceGetStaticBody(Physics::Instances::SPACE);
-    cpShape* platform1_shape = cpSegmentShapeNew(platform1, cpv(120, 600), cpv(300, 650), 0);
+    cpShape* platform1_shape = cpSegmentShapeNew(platform1, cpv(-500, 600), cpv(-250, 650), 0);
     cpShapeSetUserData(platform1_shape, platform);
     cpShapeSetFriction(platform1_shape, 0.8);
     cpSpaceAddShape(Physics::Instances::SPACE, platform1_shape);
         
     cpBody* platform2 = cpSpaceGetStaticBody(Physics::Instances::SPACE);
-    cpShape* platform2_shape = cpSegmentShapeNew(platform2, cpv(1000, 700), cpv(700, 800), 0);
+    cpShape* platform2_shape = cpSegmentShapeNew(platform2, cpv(500, 700), cpv(250, 800), 0);
     cpShapeSetUserData(platform2_shape, platform);
     cpShapeSetFriction(platform2_shape, 0.8);
     cpSpaceAddShape(Physics::Instances::SPACE, platform2_shape);
 
     cpBody* platform3 = cpSpaceGetStaticBody(Physics::Instances::SPACE);
-    cpShape* platform3_shape = cpSegmentShapeNew(platform3, cpv(120, 900), cpv(400, 1050), 0);
+    cpShape* platform3_shape = cpSegmentShapeNew(platform3, cpv(-500, 900), cpv(400, 1050), 0);
     cpShapeSetUserData(platform3_shape, platform);
     cpShapeSetFriction(platform3_shape, 0.8);
     cpSpaceAddShape(Physics::Instances::SPACE, platform3_shape);
@@ -198,17 +201,16 @@ int main(void)
            // OBJECTS.back().shape = cpSpaceAddShape(Physics::Instances::SPACE, cpCircleShapeNew(OBJECTS.back().body, OBJECTS.back().size.x, cpvzero));
            // cpShapeSetFriction(OBJECTS.back().shape, 0.7);
         //}
-        cpBodySetPosition(OBJECTS.back()->body, cpv(150, 0));
+        cpBodySetPosition(OBJECTS.back()->body, cpv(0, 0));
     }
 
     cpConstraint* joints[3];
 
-    //joints[0] = makePivot(0, {300, 300});
-    //joints[1] = makePivot(2, {450, 300});
-    //joints[2] = makePivot(4, {600, 300});
-
-
-    //Player player({300, 0}, 100, 100);
+    //joints[0] = makePivot(0, {-250, -250});
+    //joints[1] = makePivot(2, {450, -250});
+    //joints[2] = makePivot(4, {600, -250});
+    Physics::Object* obj = Physics::create_platform({-500, 400}, 800, 100);
+    //Player player({-250, 0}, 100, 100);
     MemoryManager::get_usage();
     while (!WindowShouldClose())
     {
@@ -220,7 +222,6 @@ int main(void)
             debug_submenu.update_fixed();
             menu.update_fixed();
             fixed_update_accumulator -= fixed_update_interval;
-            
         }
 
         OBJECTS.back()->update();
@@ -333,19 +334,40 @@ int main(void)
             //    cpBodySetVelocity(OBJECTS[n]->body, cpvzero);
             //}
         }
-        camera.offset.x = -cpBodyGetPosition(OBJECTS.back()->body).x + screen_width / 2;
-        camera.offset.y = -cpBodyGetPosition(OBJECTS.back()->body).y + screen_height / 2;
+        //camera.offset.x = -cpBodyGetPosition(OBJECTS.back()->body).x + screen_width / 2;
+        //Lerp(camera.offset.x, -cpBodyGetPosition(OBJECTS.back()->body).x + screen_width / 2, 10);
+        //camera.offset.y = -cpBodyGetPosition(OBJECTS.back()->body).y + screen_height / 2;
+
+        cpVect player_position = cpBodyGetPosition(OBJECTS.back()->body);
+        camera.target.x += (player_position.x - camera.target.x) * 0.01;
+        camera.target.y = player_position.y;
+
         
-        DrawLineEx({120, 400}, {120, 400 * 40}, 4, WHITE);
-        DrawLineEx({1000, 400}, {1000, 400 * 40}, 4, WHITE);
+        DrawLineEx({-500, 400}, {-500, 400 * 40}, 4, WHITE);
+        DrawLineEx({500, 400}, {500, 400 * 40}, 4, WHITE);
         
-        DrawLineEx({120, 600}, {300, 650}, 4, WHITE);
-        DrawLineEx({1000, 700}, {700, 800}, 4, WHITE);
-        DrawLineEx({120, 900}, {400, 1050}, 4, WHITE);
-        
+        DrawLineEx({-500, 600}, {-250, 650}, 4, WHITE);
+        DrawLineEx({500, 700}, {250, 800}, 4, WHITE);
+        DrawLineEx({-500, 900}, {400, 1050}, 4, WHITE);
+        DrawLineEx(obj->start, obj->end, 4, RED);
         EndMode2D();
 
+        const char* score_text = TextFormat("Score: %i", SCORE);
+        Vector2 score_offset = MeasureTextEx(GetFontDefault(), score_text, 12, 0);
 
+        cpVect player_velocity = cpBodyGetVelocity(OBJECTS.back()->body);
+        if(player_velocity.y > 0)
+        {
+            SCORE += (player_position.y / 2 * (60/GetTime())) * GetFrameTime();
+            DrawText(TextFormat("Multiplier: %f", 60/GetTime() * GetFrameTime()), 10, 80, 20, WHITE);
+        }
+        else
+        {
+            SCORE += 1 * GetFrameTime();
+        }
+        DrawText(TextFormat("Velocity: %f", player_velocity.y), 10, 60, 20, WHITE);
+        DrawText(score_text, screen_width / 2 - score_offset.x, 64, 20, WHITE);
+        DrawText(TextFormat("%f", GetTime()), 10, 10, 20, WHITE);
         DrawFPS(20, 20);
         EndDrawing();
     }

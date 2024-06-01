@@ -112,6 +112,7 @@
     <ClInclude Include="include\entity_manager.h" />
     <ClInclude Include="include\friendly.h" />
     <ClInclude Include="include\f_mortar.h" />
+    <ClInclude Include="include\game.h" />
     <ClInclude Include="include\game_tile.h" />
     <ClInclude Include="include\mem.h" />
     <ClInclude Include="include\menu.h" />
@@ -129,6 +130,7 @@
     <Content Include="assets\GroundTile.obj" />
     <Content Include="assets\gui\button.png" />
     <Content Include="assets\gui\selector.png" />
+    <Content Include="assets\levels\level_1.json" />
     <Content Include="assets\projectile.mtl" />
     <Content Include="assets\projectile.obj" />
     <Content Include="assets\shaders\glsl330\lighting.vs" />

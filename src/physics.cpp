@@ -3,17 +3,35 @@
 #include <complex>
 #include <raylib.h>
 
+#include "transform.h"
+
 namespace Physics
 {
     Physics::Object* create_square(Vector2 position, Vector2 size)
     {
         Object* obj = new Object();
-        obj->type = Physics::Shapes::BOX;
+        obj->type = Shapes::BOX;
         obj->size.x = size.x;
         obj->size.y = size.y;
         float mass = (obj->size.x * obj->size.y) * 0.001f;
-        obj->body = cpSpaceAddBody(Physics::Instances::SPACE, cpBodyNew(mass, cpMomentForBox(mass, obj->size.x, obj->size.y)));
-        obj->shape = cpSpaceAddShape(Physics::Instances::SPACE, cpBoxShapeNew(obj->body, obj->size.x, obj->size.y, 0.0));
+        obj->body = cpSpaceAddBody(Instances::SPACE, cpBodyNew(mass, cpMomentForBox(mass, obj->size.x, obj->size.y)));
+        obj->shape = cpSpaceAddShape(Instances::SPACE, cpBoxShapeNew(obj->body, obj->size.x, obj->size.y, 0.0));
+        return obj;
+    }
+
+    Object* create_platform(Vector2 start, float length, float deg)
+    {
+        Object* obj = new Object();
+        obj->type = Shapes::LINE;
+        cpBody* body = cpSpaceGetStaticBody(Instances::SPACE);
+        Vector2 end = transform::rotate_point_about_target(start, {start.x, start.y - length}, deg);
+        cpShape* shape = cpSegmentShapeNew(body, cpv(start.x, start.y), cpv(end.x, end.y), 0);
+        ObjectDetails* platform = new ObjectDetails();
+        platform->tag = ObjectDetails::GROUND;
+        cpShapeSetUserData(shape, platform);
+        cpSpaceAddShape(Instances::SPACE, shape);
+        obj->start = start;
+        obj->end = end;
         return obj;
     }
 
