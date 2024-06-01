@@ -1,0 +1,94 @@
+﻿{
+  "name": "level1",
+  "background": "background.png",
+  "width": 1000,
+  "map_objects": {
+    "walls": [
+      {
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "end": {
+          "x": 1000,
+          "y": 0
+        }
+      }
+    ],
+    "platforms": [
+      {
+        "start": {
+          "x": 0,
+          "y": 100
+        },
+        "length": 200,
+        "angle": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "spikes": [
+          {
+            "x": 300,
+            "y": 0
+          },
+          {
+            "x": 400,
+            "y": 0
+          },
+          {
+            "x": 500,
+            "y": 0
+          }
+        ],
+        "false_platforms": [
+          {
+            "start": {
+              "x": 600,
+              "y": 100
+            },
+            "length": 200,
+            "angle": 0
+          }
+        ],
+        "timed_platforms": [
+          {
+            "start": {
+              "x": 800,
+              "y": 100
+            },
+            "length": 200,
+            "angle": 0,
+            "time_ms": 2
+          }
+        ]
+      }
+    ],
+    "items": [
+      {
+        "gems": [
+          {
+            "x": 100,
+            "y": 100
+          }
+        ]
+      },
+      {
+        "keys": [
+          {
+            "x": 200,
+            "y": 100
+          }
+        ]
+      },
+      {
+        "doors": [
+          {
+            "x": 300,
+            "y": 100
+          }
+        ]
+      }
+    ]
+  }
+}

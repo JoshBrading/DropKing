@@ -18,7 +18,8 @@ namespace Physics
         {
             NONE,
             CIRCLE,
-            BOX
+            BOX,
+            LINE
         };
     }
 
@@ -39,6 +40,8 @@ namespace Physics
         cpBody* body = nullptr;
         cpShape* shape = nullptr;
         Vector2 size = {};
+        Vector2 start = {};
+        Vector2 end = {};
         bool is_grounded = false;
         bool is_jumping = false;
         cpVect ground_normal = cpv(0, 0);
@@ -57,4 +60,5 @@ namespace Physics
 
 
     Physics::Object* create_square(Vector2 position, Vector2 size);
+    Physics::Object* create_platform(Vector2 start, float length, float deg);
 }
