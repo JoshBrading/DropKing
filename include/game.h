@@ -28,21 +28,27 @@ namespace Game
         
         bool load_level(const char* level_name);
         bool start_level(Level* level);
+        bool cleanup_level(Level* level);
         
         Level* get_level(const char* level_name);
         
         Level* get_previous_level();
         Level* get_active_level();
         Level* get_next_level();
+
+        void start();
         
         std::vector<Level*> get_levels();
         
         void update();
+        void draw();
 
     private:
         const char* level_path = "assets\\levels\\";
         int score = 0;
+        bool is_paused = false;
         std::vector<Level*> levels;
         Level* active_level = nullptr;
+        
     };
 }

@@ -6,7 +6,9 @@
 #include "mem.h"
 #include "menu.h"
 #include <chipmunk/chipmunk.h>
+#include <nlohmann/json.hpp>
 
+#include "editor.h"
 #include "game.h"
 #include "physics.h"
 
@@ -127,17 +129,13 @@ int main(void)
     store.add_label("Gameplay", GetFontDefault(), 24, {GetScreenWidth() - 210.0f, 150.0f});
     store.add_button("Spawn Missile", GetFontDefault(), {GetScreenWidth() - 210.0f, 175}, 100, 10, nullptr, nullptr);
     store.add_button("Spawn Turret", GetFontDefault(), {GetScreenWidth() - 210.0f, 200}, 100, 10, nullptr, nullptr);
-    store.toggle();
     store.darken_background = false;
-
+    store.toggle();
 
     // frame counter
     int frame = 0;
 
-    // for mouse dragging
-    Vector2 lastMouse = {0.0f, 0.0f};
     Vector2 mouse = {0.0f, 0.0f};
-    bool dragging = false;
 
     //cpVect gravity = cpv(0, 98);
     cpSpaceSetGravity(Physics::Instances::SPACE, Physics::GRAVITY);
@@ -155,18 +153,13 @@ int main(void)
             cpShapeSetFriction(obj->shape, 0);
             OBJECTS.push_back(obj);
     }
-
-    cpConstraint* joints[3];
-
-    //joints[0] = makePivot(0, {-250, -250});
-    //joints[1] = makePivot(2, {450, -250});
-    //joints[2] = makePivot(4, {600, -250});
-
+    Editor* editor = new Editor(&camera);
     Game::GameWorld game;
     game.load_level("level_1");
-    Game::Level* level = game.get_active_level();
-    cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
-
+    //game.start();
+    if( Game::Level* level = game.get_active_level() )
+        cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
+    
     //Player player({-250, 0}, 100, 100);
     MemoryManager::get_usage();
     while (!WindowShouldClose())
@@ -175,15 +168,29 @@ int main(void)
 
         if (fixed_update_accumulator >= fixed_update_interval && !PAUSE)
         {
+            //store.update_fixed();
+            //debug_submenu.update_fixed();
+            //menu.update_fixed();
+            //editor->update_fixed();
+            //fixed_update_accumulator -= fixed_update_interval;
+        }
+
+        if (fixed_update_accumulator >= fixed_update_interval)
+        {
             store.update_fixed();
             debug_submenu.update_fixed();
             menu.update_fixed();
+            editor->update_fixed();
             fixed_update_accumulator -= fixed_update_interval;
         }
 
         OBJECTS.back()->update();
         BeginDrawing();
         ClearBackground(BLACK);
+        store.draw();
+        store.update();
+        debug_submenu.draw();
+        debug_submenu.update();
         if (IsKeyPressed(KEY_F1))
         {
             DEBUG = !DEBUG;
@@ -203,17 +210,7 @@ int main(void)
         }
 
         frame++;
-
-        cpSpaceStep(Physics::Instances::SPACE, 1.0 / 60.0);
-
-        // fake joint friction
-        const float drag = 0.999;
-        //cpBodySetAngularVelocity(OBJECTS[0].body, cpBodyGetAngularVelocity(OBJECTS[0].body) * drag);
-        //cpBodySetAngularVelocity(OBJECTS[2].body, cpBodyGetAngularVelocity(OBJECTS[2].body) * drag);
-        //cpBodySetAngularVelocity(OBJECTS[4].body, cpBodyGetAngularVelocity(OBJECTS[4].body) * drag);
-
-
-        lastMouse = mouse;
+        
         mouse = GetMousePosition();
 
         float mz = ((float)GetMouseWheelMove()) / 10.0;
@@ -226,39 +223,14 @@ int main(void)
             }
         }
 
-
-        if (dragging)
-        {
-            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) dragging = false;
-            float dx = ((float)(mouse.x - lastMouse.x));
-            float dy = ((float)(mouse.y - lastMouse.y));
-            camera.offset.x += dx;
-            camera.offset.y += dy;
-            camera.target = camera.offset;
-        }
-        else
-        {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
-            {
-                //dragging = true;
-            }
-        }
+        if( !PAUSE )
+            cpSpaceStep(Physics::Instances::SPACE, 1.0 / 60.0);
 
         BeginMode2D(camera);
-        // TODO should get shape offset...
         for (int n = 0; n < OBJECTS.size(); n++)
         {
             cpVect pos = cpBodyGetPosition(OBJECTS[n]->body);
             float a = cpBodyGetAngle(OBJECTS[n]->body);
-            if (OBJECTS[n]->type == Physics::Shapes::CIRCLE)
-            {
-                cpFloat r = cpCircleShapeGetRadius(OBJECTS[n]->shape);
-                DrawCircle(pos.x, pos.y, r, WHITE);
-                DrawLine(pos.x, pos.y,
-                         pos.x + cos(a) * OBJECTS[n]->size.x, pos.y + sin(a) * OBJECTS[n]->size.x,BLUE);
-            }
-            else
-            {
                 Rectangle rect = {(float)pos.x, (float)pos.y, OBJECTS[n]->size.x, OBJECTS[n]->size.y};
                 DrawRectanglePro(rect, {OBJECTS[n]->size.x / 2, OBJECTS[n]->size.y / 2},
                                  cpBodyGetAngle(OBJECTS[n]->body) * RAD2DEG,RED);
@@ -282,26 +254,15 @@ int main(void)
                 DrawLine(p[1].x, p[1].y, p[2].x, p[2].y, BLUE);
                 DrawLine(p[2].x, p[2].y, p[3].x, p[3].y, BLUE);
                 DrawLine(p[3].x, p[3].y, p[0].x, p[0].y, BLUE);
-            }
-
-
-            //if (pos.y > screen_height + 200)
-            //{
-            //    cpBodySetPosition(OBJECTS[n]->body, cpv(GetRandomValue(220, 520), GetRandomValue(100, 250)));
-            //    cpBodySetVelocity(OBJECTS[n]->body, cpvzero);
-            //}
         }
-        //camera.offset.x = -cpBodyGetPosition(OBJECTS.back()->body).x + screen_width / 2;
-        //Lerp(camera.offset.x, -cpBodyGetPosition(OBJECTS.back()->body).x + screen_width / 2, 10);
-        //camera.offset.y = -cpBodyGetPosition(OBJECTS.back()->body).y + screen_height / 2;
 
         cpVect player_position = cpBodyGetPosition(OBJECTS.back()->body);
-        camera.target.x += (player_position.x - camera.target.x) * 0.01;
-        camera.target.y = player_position.y;
+        //camera.target.x += (player_position.x - camera.target.x) * 0.01;
+        //camera.target.y = player_position.y;
 
         game.update();
+        game.draw();
         EndMode2D();
-
         const char* score_text = TextFormat("Score: %i", SCORE);
         Vector2 score_offset = MeasureTextEx(GetFontDefault(), score_text, 12, 0);
 
@@ -315,11 +276,25 @@ int main(void)
         {
             SCORE += 1 * GetFrameTime();
         }
-        DrawText(TextFormat("Velocity: %f", player_velocity.y), 10, 60, 20, WHITE);
-        DrawText(score_text, screen_width / 2 - score_offset.x, 64, 20, WHITE);
-        DrawText(TextFormat("%f", GetTime()), 10, 10, 20, WHITE);
-        DrawFPS(20, 20);
+
+            editor->update();
+            editor->draw();
+
+        //DrawText(TextFormat("Velocity: %f", player_velocity.y), 10, 60, 20, WHITE);
+        //DrawText(score_text, screen_width / 2 - score_offset.x, 64, 20, WHITE);
+        //DrawText(TextFormat("%f", GetTime()), 10, 10, 20, WHITE);
+        //DrawFPS(20, 20);
         EndDrawing();
+
+        if( IsKeyPressed(KEY_R))
+        {
+            game.start();
+            if( Game::Level* level = game.get_active_level() )
+                cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
+            cpBodySetVelocity(OBJECTS.back()->body, cpvzero);
+            cpBodySetAngularVelocity(OBJECTS.back()->body, 0);
+            cpBodySetAngle(OBJECTS.back()->body, 0);
+        }
     }
 
     EntityManager::free();

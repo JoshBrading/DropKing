@@ -48,6 +48,7 @@ MenuButton* MenuDropdown::add_button(const std::string& label_text, const Font& 
     button->width = 200;
     button->height = 20;
     button->action = action;
+    button->data = data;
     buttons.push_back(button);
     if( !current_button )
     {
@@ -73,6 +74,7 @@ MenuButton* Menu::add_button(const std::string& label_text, const Font& font, co
     button->width = 200;
     button->height = 20;
     button->action = action;
+    button->data = data;
     buttons.push_back(button);
     if( !current_button_context.button )
     {
