@@ -1,6 +1,5 @@
 #include <format>
 #include <raylib.h>
-#include <raymath.h>
 
 #include "entity_manager.h"
 #include "mem.h"
@@ -41,7 +40,7 @@ void postSolve(cpArbiter* arb, cpSpace* space, cpDataPointer data)
     if (cpArbiterIsFirstContact(arb))
     {
         DrawText("Collision", 10, 10, 20, WHITE);
-        float f = cpArbiterTotalKE(arb);
+        float f = static_cast<float>(cpArbiterTotalKE(arb));
         if (f > 20000)
         {
             f = 20000;
@@ -156,7 +155,7 @@ int main(void)
     Editor* editor = new Editor(&camera);
     Game::GameWorld game;
     game.load_level("level_1");
-    //game.start();
+    game.start();
     if( Game::Level* level = game.get_active_level() )
         cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
     
@@ -186,7 +185,7 @@ int main(void)
 
         OBJECTS.back()->update();
         BeginDrawing();
-        ClearBackground(BLACK);
+        ClearBackground(DARKGRAY);
         store.draw();
         store.update();
         debug_submenu.draw();
@@ -212,16 +211,6 @@ int main(void)
         frame++;
         
         mouse = GetMousePosition();
-
-        float mz = ((float)GetMouseWheelMove()) / 10.0;
-        if (mz != 0.0)
-        {
-            camera.zoom += mz;
-            if (camera.zoom < 0.1)
-            {
-                camera.zoom = 0.1;
-            }
-        }
 
         if( !PAUSE )
             cpSpaceStep(Physics::Instances::SPACE, 1.0 / 60.0);
@@ -288,9 +277,11 @@ int main(void)
 
         if( IsKeyPressed(KEY_R))
         {
-            game.start();
+            //game.start();
             if( Game::Level* level = game.get_active_level() )
                 cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
+            else
+                cpBodySetPosition(OBJECTS.back()->body, cpv(0, 0));
             cpBodySetVelocity(OBJECTS.back()->body, cpvzero);
             cpBodySetAngularVelocity(OBJECTS.back()->body, 0);
             cpBodySetAngle(OBJECTS.back()->body, 0);

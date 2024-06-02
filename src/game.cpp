@@ -41,12 +41,15 @@ namespace Game
         std::cout << "Loading platforms \n";
         for( auto& platform : data["map_objects"]["platforms"] )
         {
-            float x = platform["start"]["x"];
-            float y = platform["start"]["y"];
-            float length = platform["length"];
-            float deg = platform["angle"];
+            float start_x = platform["start"]["x"];
+            float start_y = platform["start"]["y"];
+            float end_x = platform["end"]["x"];
+            float end_y = platform["end"]["y"];
+            //float length = platform["length"];
+            //float deg = platform["angle"];
 
-            Physics::Object* obj = Physics::create_platform({x, y}, length, deg);
+            //Physics::Object* obj = Physics::create_platform({x, y}, length, deg);
+            Physics::Object* obj = Physics::create_platform({start_x, start_y}, {end_x, end_y});
             level->objects.push_back(obj);
         }
         std::cout << "Finished loading level \n";

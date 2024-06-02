@@ -33,4 +33,6 @@ private:
     Menu* menu = nullptr;
     EditObject* selected_object = nullptr;
     std::vector<Physics::Object*> objects;
+
+    void save_level_to_file();
 };

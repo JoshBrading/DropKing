@@ -5,6 +5,10 @@
 
 namespace Game
 {
+    enum State
+    {
+        
+    };
     struct Level
     {
         const char* name;
