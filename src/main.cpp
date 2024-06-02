@@ -7,6 +7,7 @@
 #include "menu.h"
 #include <chipmunk/chipmunk.h>
 
+#include "game.h"
 #include "physics.h"
 
 std::vector<Physics::Object*> OBJECTS;
@@ -143,43 +144,6 @@ int main(void)
 
     cpCollisionHandler* handler = cpSpaceAddCollisionHandler(Physics::Instances::SPACE, 0, 0);
     handler->postSolveFunc = (cpCollisionPostSolveFunc)postSolve;
-    
-    Physics::ObjectDetails* walls = new Physics::ObjectDetails();
-    walls->tag = Physics::ObjectDetails::WALL;
-    
-    Physics::ObjectDetails* platform = new Physics::ObjectDetails();
-    platform->tag = Physics::ObjectDetails::GROUND;
-    
-    cpBody* left_body = cpSpaceGetStaticBody(Physics::Instances::SPACE);
-    cpShape* left = cpSegmentShapeNew(left_body, cpv(-500, 400), cpv(-500, 400 * 40), 0);
-    cpShapeSetUserData(left, walls);
-    cpShapeSetFriction(left, 0.8);
-    cpSpaceAddShape(Physics::Instances::SPACE, left);
-    
-    cpBody* right_body = cpSpaceGetStaticBody(Physics::Instances::SPACE);
-    cpShape* right = cpSegmentShapeNew(right_body, cpv(500, 400), cpv(500, 400 * 40), 0);
-    cpShapeSetUserData(right, walls);
-    cpShapeSetFriction(right, 0.8);
-    cpSpaceAddShape(Physics::Instances::SPACE, right);
-        
-    cpBody* platform1 = cpSpaceGetStaticBody(Physics::Instances::SPACE);
-    cpShape* platform1_shape = cpSegmentShapeNew(platform1, cpv(-500, 600), cpv(-250, 650), 0);
-    cpShapeSetUserData(platform1_shape, platform);
-    cpShapeSetFriction(platform1_shape, 0.8);
-    cpSpaceAddShape(Physics::Instances::SPACE, platform1_shape);
-        
-    cpBody* platform2 = cpSpaceGetStaticBody(Physics::Instances::SPACE);
-    cpShape* platform2_shape = cpSegmentShapeNew(platform2, cpv(500, 700), cpv(250, 800), 0);
-    cpShapeSetUserData(platform2_shape, platform);
-    cpShapeSetFriction(platform2_shape, 0.8);
-    cpSpaceAddShape(Physics::Instances::SPACE, platform2_shape);
-
-    cpBody* platform3 = cpSpaceGetStaticBody(Physics::Instances::SPACE);
-    cpShape* platform3_shape = cpSegmentShapeNew(platform3, cpv(-500, 900), cpv(400, 1050), 0);
-    cpShapeSetUserData(platform3_shape, platform);
-    cpShapeSetFriction(platform3_shape, 0.8);
-    cpSpaceAddShape(Physics::Instances::SPACE, platform3_shape);
-
 
     for (int n = 0; n < Physics::MAX_OBJECTS; n++)
     {
@@ -190,18 +154,6 @@ int main(void)
             obj = Physics::create_square({(float)GetRandomValue(12, 48), (float)GetRandomValue(12, 14)}, {(float)GetRandomValue(48, 48), (float)GetRandomValue(48, 48)});
             cpShapeSetFriction(obj->shape, 0);
             OBJECTS.push_back(obj);
-        //}
-        //else
-        //{
-         //   obj.type = Physics::Shapes::CIRCLE;
-          //  obj.size.x = GetRandomValue(12, 24);
-           // OBJECTS.push_back(obj);
-           // mass = (PI * (OBJECTS.back().size.x * OBJECTS.back().size.x)) * 0.001;
-           // OBJECTS.back().body = cpSpaceAddBody(Physics::Instances::SPACE, cpBodyNew(mass, cpMomentForCircle(mass, 0, OBJECTS.back().size.x, cpvzero)));
-           // OBJECTS.back().shape = cpSpaceAddShape(Physics::Instances::SPACE, cpCircleShapeNew(OBJECTS.back().body, OBJECTS.back().size.x, cpvzero));
-           // cpShapeSetFriction(OBJECTS.back().shape, 0.7);
-        //}
-        cpBodySetPosition(OBJECTS.back()->body, cpv(0, 0));
     }
 
     cpConstraint* joints[3];
@@ -209,7 +161,12 @@ int main(void)
     //joints[0] = makePivot(0, {-250, -250});
     //joints[1] = makePivot(2, {450, -250});
     //joints[2] = makePivot(4, {600, -250});
-    Physics::Object* obj = Physics::create_platform({-500, 400}, 800, 100);
+
+    Game::GameWorld game;
+    game.load_level("level_1");
+    Game::Level* level = game.get_active_level();
+    cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
+
     //Player player({-250, 0}, 100, 100);
     MemoryManager::get_usage();
     while (!WindowShouldClose())
@@ -342,14 +299,7 @@ int main(void)
         camera.target.x += (player_position.x - camera.target.x) * 0.01;
         camera.target.y = player_position.y;
 
-        
-        DrawLineEx({-500, 400}, {-500, 400 * 40}, 4, WHITE);
-        DrawLineEx({500, 400}, {500, 400 * 40}, 4, WHITE);
-        
-        DrawLineEx({-500, 600}, {-250, 650}, 4, WHITE);
-        DrawLineEx({500, 700}, {250, 800}, 4, WHITE);
-        DrawLineEx({-500, 900}, {400, 1050}, 4, WHITE);
-        DrawLineEx(obj->start, obj->end, 4, RED);
+        game.update();
         EndMode2D();
 
         const char* score_text = TextFormat("Score: %i", SCORE);

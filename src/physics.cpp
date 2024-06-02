@@ -35,6 +35,22 @@ namespace Physics
         return obj;
     }
 
+    Object* create_wall(Vector2 start, float height)
+    {
+        Object* obj = new Object();
+        obj->type = Shapes::LINE;
+        cpBody* body = cpSpaceGetStaticBody(Instances::SPACE);
+        Vector2 end = {start.x, start.y + height};
+        cpShape* shape = cpSegmentShapeNew(body, cpv(start.x, start.y), cpv(end.x, end.y), 0);
+        ObjectDetails* wall = new ObjectDetails();
+        wall->tag = ObjectDetails::WALL;
+        cpShapeSetUserData(shape, wall);
+        cpSpaceAddShape(Instances::SPACE, shape);
+        obj->start = start;
+        obj->end = end;
+        return obj;
+    }
+
     void check_grounded(cpBody* body, cpArbiter* arb, void* obj)
     {
         Object* object = (Object*)obj;

@@ -59,6 +59,7 @@ namespace Physics
     };
 
 
-    Physics::Object* create_square(Vector2 position, Vector2 size);
-    Physics::Object* create_platform(Vector2 start, float length, float deg);
+    Object* create_square(Vector2 position, Vector2 size);
+    Object* create_platform(Vector2 start, float length, float deg);
+    Object* create_wall(Vector2 start, float height);
 }
