@@ -7,32 +7,7 @@
         "keys": []
     },
     "map_objects": {
-        "platforms": [
-            {
-                "angle": 0,
-                "end": {
-                    "x": -142.0,
-                    "y": -30.0
-                },
-                "length": -142.0,
-                "start": {
-                    "x": 323.0,
-                    "y": -222.0
-                }
-            },
-            {
-                "angle": 0,
-                "end": {
-                    "x": 52.0,
-                    "y": 281.0
-                },
-                "length": 52.0,
-                "start": {
-                    "x": -455.0,
-                    "y": 63.0
-                }
-            }
-        ],
+        "platforms": [],
         "walls": [
             {
                 "end": {

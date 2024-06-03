@@ -33,9 +33,14 @@ void Menu::add_image(Image* image, const Vector2 position)
     
 }
 
+void Menu::set_base_offset(Vector2 offset)
+{
+    base_offset = offset;
+}
+
 MenuButton* MenuDropdown::add_button(const std::string& label_text, const Font& font, const Vector2 position, int width,
-                             int height,
-                             const std::function<void(Menu*, void*)>& action, void* data)
+                                     int height,
+                                     const std::function<void(Menu*, void*)>& action, void* data)
 {
     auto *button = new MenuButton;
     button->label.text = label_text;
@@ -48,6 +53,7 @@ MenuButton* MenuDropdown::add_button(const std::string& label_text, const Font& 
     button->width = 200;
     button->height = 20;
     button->action = action;
+    button->data = data;
     buttons.push_back(button);
     if( !current_button )
     {
@@ -73,6 +79,7 @@ MenuButton* Menu::add_button(const std::string& label_text, const Font& font, co
     button->width = 200;
     button->height = 20;
     button->action = action;
+    button->data = data;
     buttons.push_back(button);
     if( !current_button_context.button )
     {
@@ -99,6 +106,18 @@ void Menu::toggle()
     {
         is_focused = true;
     }
+}
+
+void Menu::close()
+{
+    is_open = false;
+    is_focused = false;
+}
+
+void Menu::open()
+{
+    is_open = true;
+    is_focused = true;
 }
 
 double LAST_MOVE_TIME = 0;
@@ -130,6 +149,8 @@ void Menu::update()
         }
 
         auto [mx, my] = GetMousePosition();
+        mx -= base_offset.x;
+        my -= base_offset.y;
         for( int i = 0; i < buttons.size(); i++ )
         {
             const auto button = buttons[i];
@@ -185,17 +206,17 @@ void Menu::draw_button(const MenuButton *button, Vector2 offset)
     if( !button ) return;
     if( button->is_selected )
     {
-        DrawTexture(button->background_selected, static_cast<int>(button->position.x + offset.x), static_cast<int>(button->position.y + offset.y), WHITE);
+        DrawTexture(button->background_selected, static_cast<int>(button->position.x + offset.x + base_offset.x), static_cast<int>(button->position.y + offset.y + base_offset.y), WHITE);
         if( button->is_toggle )
         {
-            DrawTexture(selector.icon, static_cast<int>(button->position.x + offset.x + button->width - 20), static_cast<int>(button->position.y + offset.y + 2), DARKBLUE);
+            DrawTexture(selector.icon, static_cast<int>(button->position.x + offset.x + button->width - 20 + base_offset.x), static_cast<int>(button->position.y + offset.y + 2 + base_offset.y), DARKBLUE);
         }
     }else
     {
-        DrawTexture(button->background, static_cast<int>(button->position.x + offset.x), static_cast<int>(button->position.y + offset.y), WHITE);
+        DrawTexture(button->background, static_cast<int>(button->position.x + offset.x + base_offset.x), static_cast<int>(button->position.y + offset.y + base_offset.y), WHITE);
     }
     const Vector2 label_offset = Vector2Add( button->position, button->label.position );
-    DrawText(button->label.text.c_str(), static_cast<int>(label_offset.x), static_cast<int>(label_offset.y), 10, WHITE);
+    DrawText(button->label.text.c_str(), static_cast<int>(label_offset.x + base_offset.x), static_cast<int>(label_offset.y + base_offset.y), 10, WHITE);
 }
 
 void Menu::draw_dropdown(const MenuDropdown *dropdown)
@@ -214,7 +235,7 @@ void Menu::draw()
         DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), {0, 0, 0, 128});
     for(const auto& [text, font, size, position] : labels)
     {
-        DrawText(text.c_str(), static_cast<int>(position.x), static_cast<int>(position.y), size, WHITE);
+        DrawText(text.c_str(), static_cast<int>(position.x + base_offset.x), static_cast<int>(position.y + base_offset.y), size, WHITE);
     }
 
     for(const auto& button : buttons)
@@ -227,7 +248,7 @@ void Menu::draw()
         draw_dropdown(dropdown);
     }
 
-    DrawTexture(selector.icon, static_cast<int>(selector.position.x), static_cast<int>(selector.position.y), WHITE);
+    DrawTexture(selector.icon, static_cast<int>(selector.position.x + base_offset.x), static_cast<int>(selector.position.y + base_offset.y), WHITE);
 }
 
 void Menu::set_background(Image* bg)

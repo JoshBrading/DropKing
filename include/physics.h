@@ -19,7 +19,8 @@ namespace Physics
             NONE,
             CIRCLE,
             BOX,
-            LINE
+            PLATFORM,
+            WALL
         };
     }
 
@@ -53,12 +54,11 @@ namespace Physics
         void update();
     };
 
-    class World
-    {
-        
-    };
+    Object* create_square(Vector2 position, Vector2 size);
+    Object* create_platform(Vector2 start, float length, float deg);
+    Object* create_platform(Vector2 start, Vector2 end);
 
-
-    Physics::Object* create_square(Vector2 position, Vector2 size);
-    Physics::Object* create_platform(Vector2 start, float length, float deg);
+    Object* create_wall(Vector2 start, float height);
+    void add_object_to_physics(Object* obj);
+    void remove_object_from_physics(Object* obj);
 }

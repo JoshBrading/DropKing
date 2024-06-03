@@ -90,10 +90,13 @@ public:
 
     void add_label(const std::string& text, const Font& font, const int size, const Vector2 position);
     void add_image(Image* image, const Vector2 position);
+    void set_base_offset(Vector2 offset);
     MenuButton* add_button(const std::string& label_text, const Font& font, const Vector2 position, int width, int height,
                            const std::function<void(Menu* = nullptr, void* = nullptr)>& action, void* data = nullptr);
     MenuDropdown* add_dropdown(const std::string& label_text, Font* font, const Vector2& position, Image* underlay);
     void toggle();
+    void close();
+    void open();
 
     void update();
     void update_fixed();
@@ -106,6 +109,7 @@ public:
     
 private:
     bool is_open = false;
+    Vector2 base_offset = {0, 0};
     std::vector<MenuText>       labels;
     std::vector<MenuImage>      images;
     std::vector<MenuButton*>    buttons;

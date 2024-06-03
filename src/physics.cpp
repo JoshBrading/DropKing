@@ -22,17 +22,69 @@ namespace Physics
     Object* create_platform(Vector2 start, float length, float deg)
     {
         Object* obj = new Object();
-        obj->type = Shapes::LINE;
+        obj->type = Shapes::PLATFORM;
         cpBody* body = cpSpaceGetStaticBody(Instances::SPACE);
         Vector2 end = transform::rotate_point_about_target(start, {start.x, start.y - length}, deg);
         cpShape* shape = cpSegmentShapeNew(body, cpv(start.x, start.y), cpv(end.x, end.y), 0);
         ObjectDetails* platform = new ObjectDetails();
         platform->tag = ObjectDetails::GROUND;
         cpShapeSetUserData(shape, platform);
-        cpSpaceAddShape(Instances::SPACE, shape);
+        obj->body = body;
+        obj->shape = shape;
         obj->start = start;
         obj->end = end;
         return obj;
+    }
+    
+    Object* create_platform(Vector2 start, Vector2 end)
+    {
+        Object* obj = new Object();
+        obj->type = Shapes::PLATFORM;
+        cpBody* body = cpSpaceGetStaticBody(Instances::SPACE);
+        cpShape* shape = cpSegmentShapeNew(body, cpv(start.x, start.y), cpv(end.x, end.y), 0);
+        ObjectDetails* platform = new ObjectDetails();
+        platform->tag = ObjectDetails::GROUND;
+        cpShapeSetUserData(shape, platform);
+        obj->body = body;
+        obj->shape = shape;
+        obj->start = start;
+        obj->end = end;
+        return obj;
+    }
+    
+    Object* create_wall(Vector2 start, float height)
+    {
+        Object* obj = new Object();
+        obj->type = Shapes::WALL;
+        cpBody* body = cpSpaceGetStaticBody(Instances::SPACE);
+        Vector2 end = {start.x, start.y + height};
+        cpShape* shape = cpSegmentShapeNew(body, cpv(start.x, start.y), cpv(end.x, end.y), 0);
+        ObjectDetails* wall = new ObjectDetails();
+        wall->tag = ObjectDetails::WALL;
+        cpShapeSetUserData(shape, wall);
+        obj->body = body;
+        obj->shape = shape;
+        obj->start = start;
+        obj->end = end;
+        return obj;
+    }
+
+    void add_object_to_physics(Object* obj)
+    {
+        if( !obj ) return;
+        if( obj->type == Shapes::BOX )
+            cpSpaceAddBody(Instances::SPACE, obj->body);
+        
+        cpSpaceAddShape(Instances::SPACE, obj->shape);
+    }
+
+    void remove_object_from_physics(Object* obj)
+    {
+        if(!obj) return;
+        if( obj->type == Shapes::BOX )
+            cpSpaceRemoveBody(Instances::SPACE, obj->body);
+        
+        cpSpaceRemoveShape(Instances::SPACE, obj->shape);
     }
 
     void check_grounded(cpBody* body, cpArbiter* arb, void* obj)
