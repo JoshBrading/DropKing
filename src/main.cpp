@@ -33,7 +33,7 @@ cpConstraint* makePivot(int o, cpVect pos)
     return cpSpaceAddConstraint(Physics::Instances::SPACE, cpPivotJointNew(OBJECTS[o]->body, cpSpaceGetStaticBody(Physics::Instances::SPACE), pos));
 }
 
-void postSolve(cpArbiter* arb, cpSpace* space, cpDataPointer data)
+void postSolve(const cpArbiter* arb, const cpSpace* space, const cpDataPointer data)
 {
     (void)space;
     (void)data;
@@ -51,7 +51,7 @@ void postSolve(cpArbiter* arb, cpSpace* space, cpDataPointer data)
 bool DEBUG = false;
 bool DEBUG_FOOTER = false;
 bool SHOULD_CLOSE = false;
-bool PAUSE = false;
+bool PAUSE = true;
 
 int SCORE = 0;
 
@@ -89,6 +89,8 @@ int main(void)
     constexpr float fixed_update_interval = 1.0f / 60.0f;
     float fixed_update_accumulator = 0.0f;
 
+    Game::GameWorld* game = new Game::GameWorld();
+    Editor* editor = new Editor(&camera, game);
 
     Menu menu;
     menu.add_label("Menu Title", GetFontDefault(), 48, {100, 100});
@@ -112,11 +114,10 @@ int main(void)
                              [](Menu*, void*) { DEBUG_FOOTER = !DEBUG_FOOTER; }, nullptr)->is_toggle = true;
     debug_submenu.add_button("Pause Updates", GetFontDefault(), {GetScreenWidth() - 415.0f, 125}, 100, 10,
                              [](Menu*, void*) { PAUSE = !PAUSE; }, nullptr)->is_toggle = true;
-    debug_submenu.add_button("Toggle Pause Menu", GetFontDefault(), {GetScreenWidth() - 415.0f, 150}, 100, 10,
-                             [&menu](Menu*, void*)
+    debug_submenu.add_button("Start Editor", GetFontDefault(), {GetScreenWidth() - 415.0f, 150}, 100, 10,
+                             [editor](Menu*, void* data)
                              {
-                                 PAUSE = !PAUSE;
-                                 menu.toggle();
+                                 editor->start();
                              }, nullptr);
 
     store.add_button("Debug", GetFontDefault(), {GetScreenWidth() - 210.0f, 75}, 100, 10,
@@ -135,12 +136,10 @@ int main(void)
     int frame = 0;
 
     Vector2 mouse = {0.0f, 0.0f};
-
-    //cpVect gravity = cpv(0, 98);
     cpSpaceSetGravity(Physics::Instances::SPACE, Physics::GRAVITY);
 
     cpCollisionHandler* handler = cpSpaceAddCollisionHandler(Physics::Instances::SPACE, 0, 0);
-    handler->postSolveFunc = (cpCollisionPostSolveFunc)postSolve;
+    handler->postSolveFunc = reinterpret_cast<cpCollisionPostSolveFunc>(postSolve);
 
     for (int n = 0; n < Physics::MAX_OBJECTS; n++)
     {
@@ -152,19 +151,86 @@ int main(void)
             cpShapeSetFriction(obj->shape, 0);
             OBJECTS.push_back(obj);
     }
-    Editor* editor = new Editor(&camera);
-    Game::GameWorld game;
-    game.load_level("level_1");
-    game.start();
-    if( Game::Level* level = game.get_active_level() )
+    game->load_levels();
+    if( Game::Level* level = game->get_active_level() )
         cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
-    
+
+    Menu* main_menu = new Menu();
+    Menu* level_selector = new Menu();
+    int level_count = 0;
+    level_selector->add_button("-- Refresh --", GetFontDefault(), {315, 225}, 100, 10, [game, level_selector, &level_count, main_menu, editor](Menu*, void* data)
+    {
+        std::vector<Game::Level*> levels = game->get_levels();
+        if( levels.size() > level_count )
+        {
+            auto level = levels.back();
+            float x = 315;
+            float y = 250 + 25 * level_count;
+            level_selector->add_button(std::to_string(level_count + 1), GetFontDefault(), {x, y}, 100, 10, [level, game, main_menu, level_selector, editor](Menu*, void* data)
+        {
+            game->start_level(level);
+            cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
+            cpBodySetVelocity(OBJECTS.back()->body, cpvzero);
+            cpBodySetAngularVelocity(OBJECTS.back()->body, 0);
+            cpBodySetAngle(OBJECTS.back()->body, 0);
+            main_menu->close();
+            level_selector->close();
+            editor->cleanup();
+            PAUSE = false;
+        }, nullptr);
+            level_count++;
+        }
+    }, nullptr);
+    for(Game::Level* level : game->get_levels() )
+    {
+        level_count ++;
+        float x = 315;
+        float y = 225 + 25 * level_count;
+        level_selector->add_button(std::to_string(level_count), GetFontDefault(), {x, y}, 100, 10, [level, game, main_menu, level_selector, editor](Menu*, void* data)
+        {
+            game->start_level(level);
+            cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
+            cpBodySetVelocity(OBJECTS.back()->body, cpvzero);
+            cpBodySetAngularVelocity(OBJECTS.back()->body, 0);
+            cpBodySetAngle(OBJECTS.back()->body, 0);
+            main_menu->close();
+            level_selector->close();
+            editor->cleanup();
+            PAUSE = false;
+        }, nullptr);
+    }
+    main_menu->darken_background = true;
+    main_menu->add_label("DropKing", GetFontDefault(), 64, {100, 32});
+    main_menu->add_label("Main Menu", GetFontDefault(), 32, {100, 160});
+    main_menu->add_button("Quick Start", GetFontDefault(), {100, 200}, 100, 10, [main_menu, game, level_selector](Menu*, void* data)
+    {
+        game->start();
+        main_menu->close();
+        level_selector->close();
+        PAUSE = false;
+    }, nullptr);
+    main_menu->add_button("Select Level", GetFontDefault(), {100, 225}, 100, 10, [level_selector](Menu*, void* data)
+    {
+        level_selector->open();
+    }, nullptr);
+    main_menu->add_button("Editor", GetFontDefault(), {100, 250}, 250, 10, [main_menu](Menu*, void* data)
+    {
+        Editor* editor = static_cast<Editor*>(data);
+        editor->start();
+        main_menu->close();
+    }, editor);
+    main_menu->add_button("Quit", GetFontDefault(), {100, 275}, 100, 10, [](Menu*, void*) { SHOULD_CLOSE = true; }, nullptr);
+    main_menu->open();
     //Player player({-250, 0}, 100, 100);
     MemoryManager::get_usage();
-    while (!WindowShouldClose())
+    while (!WindowShouldClose() && !SHOULD_CLOSE)
     {
         fixed_update_accumulator += GetFrameTime();
-
+        if(IsKeyPressed(KEY_ESCAPE))
+        {
+            PAUSE = true;
+            main_menu->open();
+        }
         if (fixed_update_accumulator >= fixed_update_interval && !PAUSE)
         {
             //store.update_fixed();
@@ -176,20 +242,24 @@ int main(void)
 
         if (fixed_update_accumulator >= fixed_update_interval)
         {
-            store.update_fixed();
-            debug_submenu.update_fixed();
+            //store.update_fixed();
+            //debug_submenu.update_fixed();
             menu.update_fixed();
             editor->update_fixed();
+            main_menu->update_fixed();
+            level_selector->update_fixed();
             fixed_update_accumulator -= fixed_update_interval;
         }
-
+        
+        main_menu->update();
+        level_selector->update();
         OBJECTS.back()->update();
         BeginDrawing();
         ClearBackground(DARKGRAY);
-        store.draw();
-        store.update();
-        debug_submenu.draw();
-        debug_submenu.update();
+        //store.draw();
+        //store.update();
+        //debug_submenu.draw();
+        //debug_submenu.update();
         if (IsKeyPressed(KEY_F1))
         {
             DEBUG = !DEBUG;
@@ -249,8 +319,8 @@ int main(void)
         //camera.target.x += (player_position.x - camera.target.x) * 0.01;
         //camera.target.y = player_position.y;
 
-        game.update();
-        game.draw();
+        game->update();
+        game->draw();
         EndMode2D();
         const char* score_text = TextFormat("Score: %i", SCORE);
         Vector2 score_offset = MeasureTextEx(GetFontDefault(), score_text, 12, 0);
@@ -263,12 +333,13 @@ int main(void)
         }
         else
         {
-            SCORE += 1 * GetFrameTime();
+            SCORE += static_cast<int>(GetFrameTime());
         }
 
-            editor->update();
-            editor->draw();
-
+        editor->update();
+        editor->draw();
+        main_menu->draw();
+        level_selector->draw();
         //DrawText(TextFormat("Velocity: %f", player_velocity.y), 10, 60, 20, WHITE);
         //DrawText(score_text, screen_width / 2 - score_offset.x, 64, 20, WHITE);
         //DrawText(TextFormat("%f", GetTime()), 10, 10, 20, WHITE);
@@ -278,7 +349,7 @@ int main(void)
         if( IsKeyPressed(KEY_R))
         {
             //game.start();
-            if( Game::Level* level = game.get_active_level() )
+            if( Game::Level* level = game->get_active_level() )
                 cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
             else
                 cpBodySetPosition(OBJECTS.back()->body, cpv(0, 0));

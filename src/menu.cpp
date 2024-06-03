@@ -180,11 +180,6 @@ void Menu::update()
             
             }
         }
-    
-        if( IsKeyPressed(KEY_ESCAPE))
-        {
-            toggle();
-        }
     }
     
 }
