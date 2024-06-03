@@ -1,18 +1,30 @@
 ﻿#include "game.h"
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
 
 namespace Game
 {
-    bool GameWorld::load_level(const char* level_name)
+    void GameWorld::load_levels()
     {
+        for (const auto & file : std::filesystem::directory_iterator(level_path))
+        {
+            if( file.path().extension() == ".json" )
+            {
+                std::string level_name = file.path().stem().string();
+                load_level(level_name);
+            }
+        }
+    }
+
+    bool GameWorld::load_level(std::string level_name)
+    {
+        //load_levels_at_path(level_name);
         std::cout << "Loading level: " << level_name << '\n';
         Level* level = new Level();
-        std::string path = level_path + std::string(level_name) + ".json";
-        std::filesystem::path current_path = std::filesystem::current_path();
-        path = current_path.string() + "\\" + path;
+        std::string path = level_path + level_name + ".json";
         std::cout << "Reading file: " << path << '\n';
         std::ifstream file(path);
         if( !file.is_open() )
@@ -22,7 +34,8 @@ namespace Game
         }
         nlohmann::json data = nlohmann::json::parse(file);
 
-        level->name = to_string(data["name"]).c_str();
+        //std::string name = data["name"];
+        level->name = data["name"].get<std::string>().c_str();
         level->spawn_point = {data["spawn_point"]["x"], data["spawn_point"]["y"]};
         level->time_to_complete = data["time_to_complete"];
         level->end_height = data["end_height"];
@@ -45,10 +58,7 @@ namespace Game
             float start_y = platform["start"]["y"];
             float end_x = platform["end"]["x"];
             float end_y = platform["end"]["y"];
-            //float length = platform["length"];
-            //float deg = platform["angle"];
-
-            //Physics::Object* obj = Physics::create_platform({x, y}, length, deg);
+            
             Physics::Object* obj = Physics::create_platform({start_x, start_y}, {end_x, end_y});
             level->objects.push_back(obj);
         }
@@ -103,6 +113,11 @@ namespace Game
         return active_level;
     }
 
+    void GameWorld::add_level(Level* level)
+    {
+        levels.push_back(level);
+    }
+
     void GameWorld::start()
     {
         if( levels.empty() )
@@ -110,14 +125,15 @@ namespace Game
             std::cerr << "No levels loaded \n";
             return;
         }
-        if( active_level ) // Restart if I add a restart button...
-        {
+        if( active_level ) // Restart active level
             start_level(active_level);
-        }
-        else
-        {
+        else               // Or start first level
             start_level(levels[0]);
-        }
+    }
+
+    std::vector<Level*> GameWorld::get_levels()
+    {
+        return levels;
     }
 
     void GameWorld::update()
