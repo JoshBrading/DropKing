@@ -23,12 +23,11 @@
     <ClCompile Include="src\editor.cpp" />
     <ClCompile Include="src\entity.cpp" />
     <ClCompile Include="src\entity_manager.cpp" />
-    <ClCompile Include="src\f_mortar.cpp" />
     <ClCompile Include="src\game.cpp" />
-    <ClCompile Include="src\game_tile.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\menu.cpp" />
     <ClCompile Include="src\physics.cpp" />
+    <ClCompile Include="src\platform.cpp" />
     <ClCompile Include="src\player.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -104,26 +103,23 @@
       <AdditionalIncludeDirectories>C:\Users\maste\OneDrive\Desktop\Code\Games\DropKing\include;C:\Users\maste\OneDrive\Desktop\Code\Games\raylib\out\build\x64-Debug\raylib\include;</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="src\projectile.cpp" />
+    <ClCompile Include="src\timed_platform.cpp" />
     <ClCompile Include="src\transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\collision.h" />
     <ClInclude Include="include\editor.h" />
-    <ClInclude Include="include\enemy.h" />
     <ClInclude Include="include\entity.h" />
     <ClInclude Include="include\entity_manager.h" />
-    <ClInclude Include="include\friendly.h" />
-    <ClInclude Include="include\f_mortar.h" />
     <ClInclude Include="include\game.h" />
-    <ClInclude Include="include\game_tile.h" />
+    <ClInclude Include="include\item.h" />
     <ClInclude Include="include\mem.h" />
     <ClInclude Include="include\menu.h" />
+    <ClInclude Include="include\platform.h" />
+    <ClInclude Include="include\timed_platform.h" />
     <ClInclude Include="include\physics.h" />
     <ClInclude Include="include\player.h" />
-    <ClInclude Include="include\projectile.h" />
     <ClInclude Include="include\transform.h" />
-    <ClInclude Include="include\weapon.h" />
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />

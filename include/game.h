@@ -1,15 +1,13 @@
 ﻿#pragma once
 #include <vector>
-#include <xstring>
-
+#include "entity.h"
 #include "physics.h"
+#include "player.h"
+#include "timed_platform.h"
 
 namespace Game
 {
-    enum State
-    {
-        
-    };
+    inline bool PAUSE = true;
     struct Level
     {
         const char* name = "";
@@ -18,9 +16,10 @@ namespace Game
         int time_to_complete = 0;
         float end_height = 0;
         Vector2 spawn_point = {0, 0};
-        
+
+        Entities::Player* player = nullptr;
         std::vector<Physics::Object*> objects;
-        std::vector<Physics::Object*> platforms;
+        std::vector<Entities::Obstacles::TimedPlatform*> platforms;
         std::vector<Physics::Object*> gems;
         std::vector<Physics::Object*> keys;
         std::vector<Physics::Object*> doors;
@@ -29,6 +28,7 @@ namespace Game
     class GameWorld
     {
     public:
+        GameWorld(Camera2D* camera);
         void set_level_path(const char* path);
 
         void load_levels();
@@ -52,6 +52,7 @@ namespace Game
         void draw();
 
     private:
+        Camera2D* camera = nullptr;
         const char* level_path = "assets\\levels\\";
         int score = 0;
         bool is_paused = false;

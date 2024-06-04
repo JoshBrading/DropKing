@@ -1,12 +1,19 @@
 ﻿#include "game.h"
-
+#include "player.h"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
 
+#include "timed_platform.h"
+
 namespace Game
 {
+    GameWorld::GameWorld(Camera2D* camera)
+    {
+        this->camera = camera;
+    }
+
     void GameWorld::load_levels()
     {
         for (const auto & file : std::filesystem::directory_iterator(level_path))
@@ -37,6 +44,9 @@ namespace Game
         //std::string name = data["name"];
         level->name = data["name"].get<std::string>().c_str();
         level->spawn_point = {data["spawn_point"]["x"], data["spawn_point"]["y"]};
+
+        level->player = new Entities::Player(level->spawn_point);
+        
         level->time_to_complete = data["time_to_complete"];
         level->end_height = data["end_height"];
 
@@ -59,8 +69,10 @@ namespace Game
             float end_x = platform["end"]["x"];
             float end_y = platform["end"]["y"];
             
-            Physics::Object* obj = Physics::create_platform({start_x, start_y}, {end_x, end_y});
-            level->objects.push_back(obj);
+            //Physics::Object* obj = Physics::create_platform({start_x, start_y}, {end_x, end_y});
+            Entities::Obstacles::TimedPlatform* ent_platform = new Entities::Obstacles::TimedPlatform({start_x, start_y}, {end_x, end_y}, 1);
+            level->objects.push_back(ent_platform->get_platform());
+            level->platforms.push_back(ent_platform);
         }
         std::cout << "Finished loading level \n";
         levels.push_back(level);
@@ -84,6 +96,12 @@ namespace Game
         {
             Physics::add_object_to_physics(obj);
         }
+        for(auto& platform : level->platforms)
+        {
+            platform->reset();
+        }
+        add_object_to_physics(level->player->get_player_object());
+        level->player->reset_player();
         std::cout << "Level started \n";
         return true;
     }
@@ -95,11 +113,14 @@ namespace Game
             std::cerr << "Level does not exist \n";
             return false;
         }
+        if( cpSpaceContainsBody(Physics::Instances::SPACE, level->player->get_player_object()->body))
+            cpSpaceRemoveBody(Physics::Instances::SPACE, level->player->get_player_object()->body);
+        if( cpSpaceContainsShape(Physics::Instances::SPACE, level->player->get_player_object()->shape))
+            cpSpaceRemoveShape(Physics::Instances::SPACE, level->player->get_player_object()->shape);
         for( auto& obj : level->objects )
         {
-            if( obj->type == Physics::Shapes::BOX )
-                cpSpaceRemoveBody(Physics::Instances::SPACE, obj->body);
-            cpSpaceRemoveShape(Physics::Instances::SPACE, obj->shape);
+            if( cpSpaceContainsShape(Physics::Instances::SPACE, obj->shape))
+                cpSpaceRemoveShape(Physics::Instances::SPACE, obj->shape);
         }
         active_level = nullptr;
         std::cout << "Level cleaned up \n";
@@ -138,6 +159,21 @@ namespace Game
 
     void GameWorld::update()
     {
+        if( active_level )
+        {
+            if( IsKeyPressed(KEY_R))
+            {
+                active_level->player->reset_player();
+                start();
+            }
+            active_level->player->update();
+            camera->target.x += (active_level->player->get_position().x - camera->target.x) * 0.01;
+            camera->target.y = active_level->player->get_position().y;
+            for( auto& platform : active_level->platforms )
+            {
+                platform->update();
+            }
+        }
     }
 
     void GameWorld::draw()
@@ -146,8 +182,14 @@ namespace Game
         {
             for( auto& obj : active_level->objects )
             {
-                DrawLineEx(obj->start, obj->end, 4, {255, 255, 255, 255});
+                if( obj->type == Physics::Shapes::WALL)
+                    DrawLineEx(obj->start, obj->end, 4, {255, 255, 255, 255});
             }
+            for( auto& platform : active_level->platforms )
+            {
+                platform->draw();
+            }
+            active_level->player->draw();
         }
     }
 }

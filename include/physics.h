@@ -10,7 +10,8 @@ namespace Physics
 
     namespace Instances
     {
-        inline cpSpace* SPACE = cpSpaceNew();
+        inline cpSpace* SPACE;
+        inline cpCollisionHandler* COLLISION_HANDLER;
     }
     namespace Shapes
     {
@@ -30,9 +31,12 @@ namespace Physics
         {
             NONE,
             GROUND,
-            WALL
+            WALL,
+            PLAYER
         };
+        
         Tag tag;
+        void* data;
     };
 
     struct Object
@@ -53,7 +57,7 @@ namespace Physics
         float jump_scale_increase = 2.0f;
         void update();
     };
-
+    void init();
     Object* create_square(Vector2 position, Vector2 size);
     Object* create_platform(Vector2 start, float length, float deg);
     Object* create_platform(Vector2 start, Vector2 end);

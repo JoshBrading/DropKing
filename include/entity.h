@@ -1,6 +1,8 @@
-﻿#ifndef ENTITY_H
-#define ENTITY_H
+﻿#pragma once
+
 #include <raylib.h>
+#include <string>
+#include "physics.h"
 
 enum EntityType
 {
@@ -32,7 +34,9 @@ enum EntityTag
     OBJECT,
     COLLECTIBLE,
     PLAYER,
-    CHARACTER,
+    TIMED_PLATFORM,
+    FALSE_PLATFORM,
+    SPIKE_PIT,
     NONE
 };
 
@@ -40,17 +44,19 @@ class Entity
 {
     friend class EntityManager;
 public:
-    Entity(const Vector3 position, const Vector3 rotation, const char* model_path, const char* name);
-    Entity(Entity&&) = delete; // Move constructor
-    Entity(const Entity&) = delete; // Copy constructor
-    Entity& operator=(Entity&&) = delete; // Move assignment operator
-    Entity& operator=(const Entity&) = delete; // Copy assignment operator
-    virtual ~Entity(); // Destructor, needed for virtual function overrides?
+    Entity(Vector2 position, float deg_rotation, std::string sprite_path);
+    Entity(Vector2 position, float deg_rotation);
+    Entity(Entity&&) = delete;
+    Entity(const Entity&) = delete;
+    Entity& operator=(Entity&&) = delete;
+    Entity& operator=(const Entity&) = delete;
+    virtual ~Entity();
     
     virtual void update();
     virtual void update_fixed();
     virtual void draw();
-    virtual void draw_debug(const Camera& camera);
+    virtual void draw_debug(const Camera2D& camera);
+    virtual void on_collision(cpArbiter* arb, cpSpace* space, Entity* entity);
 
     int get_id() const;
     const char* get_name() const;
@@ -61,35 +67,31 @@ public:
     EntityTeam get_team() const;
     void set_team(EntityTeam team);
 
-    Vector3 get_position() const;
-    
-    Vector3 get_target_position() const;
-    void set_target_position( Vector3 target_position );
+    Vector2 get_position() const;
+
+    Vector2 get_target_position() const;
+    void set_target_position(const Vector2 target_position);
     Model model;
     
 private:
     int id;
     const char* name;
     
-    EntityTag tag;
     EntityTeam team;
     EntityState state;
     
-    bool visibility;
-    bool collision;
+    bool visibility = true;
+    bool collision = true;
+    Physics::Object* object = nullptr;
 
 
-    Vector3 target_position;
+    Vector2 target_position;
 
 protected:
-    Vector3 position;
-    Vector3 rotation;
-    Vector3 scale;
+    EntityTag tag;
+    Vector2 position;
+    float rotation;
+    Vector2 scale;
 
-    // 2D Conversion
-    Vector2 position_2d;
-    
     void set_id(int id);
 };
-
-#endif //ENTITY_H

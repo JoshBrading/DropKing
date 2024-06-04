@@ -3,7 +3,44 @@
 #include <complex>
 #include <raylib.h>
 
+#include "entity.h"
 #include "transform.h"
+
+
+void chipmunk_post_step(cpSpace* space, void* key, void* data)
+{
+    
+}
+
+void chipmunk_pre_solve_collision(cpArbiter* arb, cpSpace* space, cpDataPointer data)
+{
+    (void)space;
+    (void)data;
+    if (cpArbiterIsFirstContact(arb))
+    {
+        // remove 2nd body from space
+        cpShape *a, *b;
+        cpArbiterGetShapes(arb, &a, &b);
+        Physics::ObjectDetails* details_a = static_cast<Physics::ObjectDetails*>(cpShapeGetUserData(a));
+        Physics::ObjectDetails* details_b = static_cast<Physics::ObjectDetails*>(cpShapeGetUserData(b));
+        Entity* entity_a = nullptr;
+        Entity* entity_b = nullptr;
+
+        if( details_a )
+            entity_a = static_cast<Entity*>(details_a->data);
+        if( details_b )
+            entity_b = static_cast<Entity*>(details_b->data);
+        
+        if( entity_a )
+            entity_a->on_collision(arb, space, entity_b);
+        if( entity_b )
+            entity_b->on_collision(arb, space, entity_a);
+        
+        cpSpaceAddPostStepCallback(space, chipmunk_post_step, NULL, NULL);
+    }
+}
+
+
 
 namespace Physics
 {
@@ -14,8 +51,8 @@ namespace Physics
         obj->size.x = size.x;
         obj->size.y = size.y;
         float mass = (obj->size.x * obj->size.y) * 0.001f;
-        obj->body = cpSpaceAddBody(Instances::SPACE, cpBodyNew(mass, cpMomentForBox(mass, obj->size.x, obj->size.y)));
-        obj->shape = cpSpaceAddShape(Instances::SPACE, cpBoxShapeNew(obj->body, obj->size.x, obj->size.y, 0.0));
+        obj->body = cpBodyNew(mass, cpMomentForBox(mass, obj->size.x, obj->size.y));
+        obj->shape = cpBoxShapeNew(obj->body, obj->size.x, obj->size.y, 0.0);
         return obj;
     }
 
@@ -106,7 +143,7 @@ namespace Physics
         {
             object->is_grounded = true;
             object->ground_normal = n;
-           // object->ground = b;
+            // object->ground = b;
         }
         
     }
@@ -136,5 +173,10 @@ namespace Physics
         
     }
 
-
+    void init()
+    {
+        Instances::SPACE = cpSpaceNew();
+        Instances::COLLISION_HANDLER = cpSpaceAddCollisionHandler(Instances::SPACE, 0, 0);
+        Instances::COLLISION_HANDLER->preSolveFunc = reinterpret_cast<cpCollisionPreSolveFunc>(chipmunk_pre_solve_collision);
+    }
 }
