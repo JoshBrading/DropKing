@@ -5,6 +5,8 @@
 #include <raymath.h>
 #include <nlohmann/json.hpp>
 
+#include "platform.h"
+
 Editor::Editor(Camera2D* camera, Game::GameWorld* game)
 {
     this->camera = camera;
@@ -12,10 +14,9 @@ Editor::Editor(Camera2D* camera, Game::GameWorld* game)
     menu = new Menu();
     Font font = GetFontDefault();
     menu->add_label("Objects", font, 20, {5, 10});
-    menu->add_button("Create Wall", font, {10, 35}, 200, 20, [](Menu* menu, void* data)
+    menu->add_button("Create Wall", font, {10, 35}, 200, 20, [this](Menu* menu, void* data)
     {
-        Editor* editor = static_cast<Editor*>(data);
-        editor->state = WAITING;
+        this->state = WAITING;
         menu->close();
     }, this);
     menu->add_label("Items", font, 20, {5, 65});
@@ -39,13 +40,19 @@ Editor::Editor(Camera2D* camera, Game::GameWorld* game)
     {
     }, this);
     menu->add_label("Level Data", font, 20, {5, 275});
-    menu->add_button("Set Spawn Point", font, {10, 300}, 200, 20, [](Menu* menu, void* data)
+    menu->add_button("Set Spawn Point", font, {10, 300}, 200, 20, [this](Menu* menu, void* data)
     {
-        Editor* editor = static_cast<Editor*>(data);
-        editor->state = SETTING_SPAWN;
+        this->state = SETTING_SPAWN;
         menu->close();
     }, this);
-    menu->add_button("Save Level", font, {10, 325}, 200, 20, [](Menu* menu, void* data)
+    menu->add_button("Demo Level", font, {10, 325}, 200, 20, [this, game](Menu* menu, void* data)
+    {
+        Game::PAUSE = false;
+        this->state = DEMO;
+        game->start();
+        menu->close();
+    }, nullptr);
+    menu->add_button("Save Level", font, {10, 350}, 200, 20, [](Menu* menu, void* data)
     {
         Editor* editor = static_cast<Editor*>(data);
         editor->save_level_to_file();
@@ -66,6 +73,7 @@ void Editor::start()
     level = new Game::Level();
     level->objects.push_back(Physics::create_wall({-500, 0}, 10000));
     level->objects.push_back(Physics::create_wall({500, 0}, 10000));
+    level->player = new Game::Entities::Player({0, 0});
     game->start_level(level);
 }
 
@@ -108,12 +116,19 @@ void Editor::update()
     {
         if( !Vector2Equals(selected_object->start, mouse) && IsMouseButtonPressed(0))
         {
-            Physics::Object* obj = Physics::create_platform(selected_object->start, mouse);
-            level->objects.push_back(obj);
-            Physics::add_object_to_physics(obj);
+            auto obj = new Game::Entities::Obstacles::TimedPlatform(selected_object->start, mouse, 2);
+            level->platforms.push_back(obj);
+            level->objects.push_back(obj->get_platform());
+            Physics::add_object_to_physics(obj->get_platform());
             selected_object = nullptr;
             state = NONE;
         }
+    }
+
+    if(IsKeyPressed(KEY_R))
+    {
+        level->player->set_spawn_point(level->spawn_point);
+        level->player->reset_player();
     }
     
 }
@@ -140,10 +155,13 @@ void Editor::draw()
     Vector2 mouse = GetScreenToWorld2D(mouse_screen_pos, *camera);
     if( selected_object )
         DrawLineEx(selected_object->start, mouse, 4, GREEN);
-    if( state != SETTING_SPAWN )
-        DrawCircle(level->spawn_point.x, level->spawn_point.y, 5, YELLOW);
-    else
-        DrawCircle(mouse.x, mouse.y, 5, GREEN);
+    if( state != DEMO)
+    {
+        if( state != SETTING_SPAWN)
+            DrawCircle(level->spawn_point.x, level->spawn_point.y, 5, YELLOW);
+        else
+            DrawCircle(mouse.x, mouse.y, 5, GREEN);
+    }
     EndMode2D();
 
     if( state == WAITING )

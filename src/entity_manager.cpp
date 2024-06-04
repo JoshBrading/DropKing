@@ -3,8 +3,6 @@
 #include <string>
 #include <ranges>
 #include "entity_manager.h"
-#include "f_mortar.h"
-#include "game_tile.h"
 
 EntityManager& EntityManager::instance()
 {
@@ -34,7 +32,7 @@ void EntityManager::i_draw() const
 int scroll_offset = 0;
 void EntityManager::i_draw_debug(const Camera& camera) const
 {
-    bool alternate = true;
+    /*bool alternate = true;
     
     int y_offset = 2 + scroll_offset;
 
@@ -82,7 +80,7 @@ void EntityManager::i_draw_debug(const Camera& camera) const
             
         if( change > 0 && scroll_offset < 0)
             scroll_offset += change * 40;
-    }
+    }*/
 }
 
 int EntityManager::i_get_entity_count() const
@@ -95,17 +93,6 @@ Entity* EntityManager::i_spawn_entity(const EntityType type, const Vector3 posit
     std::cout << "Entity Manager: Spawning entity of type: " << type << ".\n";
 
     Entity* entity = nullptr;
-    switch( type )
-    {
-        case TILE:
-            entity = new GameTile(position, rotation);
-            break;
-        case MORTAR:
-            entity = new FMortar(position);
-            break;
-        case SOLDIER:
-            break;
-    }
     if( !entity ) return entity;
     add_entity_to_manager(entity);
     std::cout << "Entity Manager: Entity spawned.\n";

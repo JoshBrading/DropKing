@@ -11,47 +11,9 @@
 #include "game.h"
 #include "physics.h"
 
-std::vector<Physics::Object*> OBJECTS;
-
-cpConstraint* makePivot(int o, cpVect pos)
-{
-    OBJECTS[o]->type = Physics::Shapes::BOX;
-    OBJECTS[o]->size = {96, 8};
-    OBJECTS[o]->body = cpSpaceAddBody(Physics::Instances::SPACE, cpBodyNew(0, 0));
-    OBJECTS[o]->shape = cpSpaceAddShape(Physics::Instances::SPACE, cpBoxShapeNew(OBJECTS[o]->body, OBJECTS[o]->size.x, OBJECTS[o]->size.y, 0.0));
-    cpShapeSetFriction(OBJECTS[o]->shape, 0.6);
-    cpShapeSetMass(OBJECTS[o]->shape, 8);
-
-    OBJECTS[o + 1]->type = Physics::Shapes::BOX;
-    OBJECTS[o + 1]->size = {8, 96};
-    OBJECTS[o + 1]->body = OBJECTS[o]->body;
-    OBJECTS[o + 1]->shape = cpSpaceAddShape(Physics::Instances::SPACE, cpBoxShapeNew(OBJECTS[o]->body, OBJECTS[o + 1]->size.x, OBJECTS[o + 1]->size.y, 0.0));
-    cpShapeSetFriction(OBJECTS[o + 1]->shape, 0.6);
-    cpShapeSetMass(OBJECTS[o + 1]->shape, 8);
-
-    cpBodySetPosition(OBJECTS[o]->body, pos);
-    return cpSpaceAddConstraint(Physics::Instances::SPACE, cpPivotJointNew(OBJECTS[o]->body, cpSpaceGetStaticBody(Physics::Instances::SPACE), pos));
-}
-
-void postSolve(const cpArbiter* arb, const cpSpace* space, const cpDataPointer data)
-{
-    (void)space;
-    (void)data;
-    if (cpArbiterIsFirstContact(arb))
-    {
-        DrawText("Collision", 10, 10, 20, WHITE);
-        float f = static_cast<float>(cpArbiterTotalKE(arb));
-        if (f > 20000)
-        {
-            f = 20000;
-        }
-    }
-}
-
 bool DEBUG = false;
 bool DEBUG_FOOTER = false;
 bool SHOULD_CLOSE = false;
-bool PAUSE = true;
 
 int SCORE = 0;
 
@@ -89,7 +51,7 @@ int main(void)
     constexpr float fixed_update_interval = 1.0f / 60.0f;
     float fixed_update_accumulator = 0.0f;
 
-    Game::GameWorld* game = new Game::GameWorld();
+    Game::GameWorld* game = new Game::GameWorld(&camera);
     Editor* editor = new Editor(&camera, game);
 
     Menu menu;
@@ -112,8 +74,8 @@ int main(void)
                              [](Menu*, void*) { DEBUG = !DEBUG; }, nullptr)->is_toggle = true;
     debug_submenu.add_button("Show Footer", GetFontDefault(), {GetScreenWidth() - 415.0f, 100}, 100, 10,
                              [](Menu*, void*) { DEBUG_FOOTER = !DEBUG_FOOTER; }, nullptr)->is_toggle = true;
-    debug_submenu.add_button("Pause Updates", GetFontDefault(), {GetScreenWidth() - 415.0f, 125}, 100, 10,
-                             [](Menu*, void*) { PAUSE = !PAUSE; }, nullptr)->is_toggle = true;
+    debug_submenu.add_button("Game::PAUSE Updates", GetFontDefault(), {GetScreenWidth() - 415.0f, 125}, 100, 10,
+                             [](Menu*, void*) { Game::PAUSE = !Game::PAUSE; }, nullptr)->is_toggle = true;
     debug_submenu.add_button("Start Editor", GetFontDefault(), {GetScreenWidth() - 415.0f, 150}, 100, 10,
                              [editor](Menu*, void* data)
                              {
@@ -136,24 +98,10 @@ int main(void)
     int frame = 0;
 
     Vector2 mouse = {0.0f, 0.0f};
+    Physics::init();
     cpSpaceSetGravity(Physics::Instances::SPACE, Physics::GRAVITY);
-
-    cpCollisionHandler* handler = cpSpaceAddCollisionHandler(Physics::Instances::SPACE, 0, 0);
-    handler->postSolveFunc = reinterpret_cast<cpCollisionPostSolveFunc>(postSolve);
-
-    for (int n = 0; n < Physics::MAX_OBJECTS; n++)
-    {
-        cpFloat mass;
-        Physics::Object* obj;
-        //if (n % 2)
-        //{
-            obj = Physics::create_square({(float)GetRandomValue(12, 48), (float)GetRandomValue(12, 14)}, {(float)GetRandomValue(48, 48), (float)GetRandomValue(48, 48)});
-            cpShapeSetFriction(obj->shape, 0);
-            OBJECTS.push_back(obj);
-    }
+    
     game->load_levels();
-    if( Game::Level* level = game->get_active_level() )
-        cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
 
     Menu* main_menu = new Menu();
     Menu* level_selector = new Menu();
@@ -169,14 +117,10 @@ int main(void)
             level_selector->add_button(std::to_string(level_count + 1), GetFontDefault(), {x, y}, 100, 10, [level, game, main_menu, level_selector, editor](Menu*, void* data)
         {
             game->start_level(level);
-            cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
-            cpBodySetVelocity(OBJECTS.back()->body, cpvzero);
-            cpBodySetAngularVelocity(OBJECTS.back()->body, 0);
-            cpBodySetAngle(OBJECTS.back()->body, 0);
             main_menu->close();
             level_selector->close();
             editor->cleanup();
-            PAUSE = false;
+            Game::PAUSE = false;
         }, nullptr);
             level_count++;
         }
@@ -189,14 +133,10 @@ int main(void)
         level_selector->add_button(std::to_string(level_count), GetFontDefault(), {x, y}, 100, 10, [level, game, main_menu, level_selector, editor](Menu*, void* data)
         {
             game->start_level(level);
-            cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
-            cpBodySetVelocity(OBJECTS.back()->body, cpvzero);
-            cpBodySetAngularVelocity(OBJECTS.back()->body, 0);
-            cpBodySetAngle(OBJECTS.back()->body, 0);
             main_menu->close();
             level_selector->close();
             editor->cleanup();
-            PAUSE = false;
+            Game::PAUSE = false;
         }, nullptr);
     }
     main_menu->darken_background = true;
@@ -207,7 +147,7 @@ int main(void)
         game->start();
         main_menu->close();
         level_selector->close();
-        PAUSE = false;
+        Game::PAUSE = false;
     }, nullptr);
     main_menu->add_button("Select Level", GetFontDefault(), {100, 225}, 100, 10, [level_selector](Menu*, void* data)
     {
@@ -221,23 +161,15 @@ int main(void)
     }, editor);
     main_menu->add_button("Quit", GetFontDefault(), {100, 275}, 100, 10, [](Menu*, void*) { SHOULD_CLOSE = true; }, nullptr);
     main_menu->open();
-    //Player player({-250, 0}, 100, 100);
+
     MemoryManager::get_usage();
     while (!WindowShouldClose() && !SHOULD_CLOSE)
     {
         fixed_update_accumulator += GetFrameTime();
         if(IsKeyPressed(KEY_ESCAPE))
         {
-            PAUSE = true;
+            Game::PAUSE = true;
             main_menu->open();
-        }
-        if (fixed_update_accumulator >= fixed_update_interval && !PAUSE)
-        {
-            //store.update_fixed();
-            //debug_submenu.update_fixed();
-            //menu.update_fixed();
-            //editor->update_fixed();
-            //fixed_update_accumulator -= fixed_update_interval;
         }
 
         if (fixed_update_accumulator >= fixed_update_interval)
@@ -253,7 +185,7 @@ int main(void)
         
         main_menu->update();
         level_selector->update();
-        OBJECTS.back()->update();
+        //OBJECTS.back()->update();
         BeginDrawing();
         ClearBackground(DARKGRAY);
         //store.draw();
@@ -282,50 +214,17 @@ int main(void)
         
         mouse = GetMousePosition();
 
-        if( !PAUSE )
+        if( !Game::PAUSE )
             cpSpaceStep(Physics::Instances::SPACE, 1.0 / 60.0);
 
         BeginMode2D(camera);
-        for (int n = 0; n < OBJECTS.size(); n++)
-        {
-            cpVect pos = cpBodyGetPosition(OBJECTS[n]->body);
-            float a = cpBodyGetAngle(OBJECTS[n]->body);
-                Rectangle rect = {(float)pos.x, (float)pos.y, OBJECTS[n]->size.x, OBJECTS[n]->size.y};
-                DrawRectanglePro(rect, {OBJECTS[n]->size.x / 2, OBJECTS[n]->size.y / 2},
-                                 cpBodyGetAngle(OBJECTS[n]->body) * RAD2DEG,RED);
-                Vector2 p[4] = {0};
-                Vector2 sz;
-                sz.x = OBJECTS[n]->size.x / 2.0;
-                sz.y = OBJECTS[n]->size.y / 2.0;
-                p[0] = {-sz.x, -sz.y};
-                p[1] = {sz.x, -sz.y};
-                p[2] = {sz.x, sz.y};
-                p[3] = {-sz.x, sz.y};
-
-                for (int i = 0; i < 4; i++)
-                {
-                    float x = p[i].x;
-                    float y = p[i].y;
-                    p[i].x = (cos(a) * x) - (sin(a) * y) + pos.x;
-                    p[i].y = (cos(a) * y) + (sin(a) * x) + pos.y;
-                }
-                DrawLine(p[0].x, p[0].y, p[1].x, p[1].y, BLUE);
-                DrawLine(p[1].x, p[1].y, p[2].x, p[2].y, BLUE);
-                DrawLine(p[2].x, p[2].y, p[3].x, p[3].y, BLUE);
-                DrawLine(p[3].x, p[3].y, p[0].x, p[0].y, BLUE);
-        }
-
-        cpVect player_position = cpBodyGetPosition(OBJECTS.back()->body);
-        //camera.target.x += (player_position.x - camera.target.x) * 0.01;
-        //camera.target.y = player_position.y;
-
-        game->update();
         game->draw();
         EndMode2D();
+        game->update();
         const char* score_text = TextFormat("Score: %i", SCORE);
         Vector2 score_offset = MeasureTextEx(GetFontDefault(), score_text, 12, 0);
 
-        cpVect player_velocity = cpBodyGetVelocity(OBJECTS.back()->body);
+        /*cpVect player_velocity = cpBodyGetVelocity(OBJECTS.back()->body);
         if(player_velocity.y > 0)
         {
             SCORE += (player_position.y / 2 * (60/GetTime())) * GetFrameTime();
@@ -334,7 +233,7 @@ int main(void)
         else
         {
             SCORE += static_cast<int>(GetFrameTime());
-        }
+        }*/
 
         editor->update();
         editor->draw();
@@ -345,18 +244,6 @@ int main(void)
         //DrawText(TextFormat("%f", GetTime()), 10, 10, 20, WHITE);
         //DrawFPS(20, 20);
         EndDrawing();
-
-        if( IsKeyPressed(KEY_R))
-        {
-            //game.start();
-            if( Game::Level* level = game->get_active_level() )
-                cpBodySetPosition(OBJECTS.back()->body, cpv(level->spawn_point.x, level->spawn_point.y));
-            else
-                cpBodySetPosition(OBJECTS.back()->body, cpv(0, 0));
-            cpBodySetVelocity(OBJECTS.back()->body, cpvzero);
-            cpBodySetAngularVelocity(OBJECTS.back()->body, 0);
-            cpBodySetAngle(OBJECTS.back()->body, 0);
-        }
     }
 
     EntityManager::free();

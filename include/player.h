@@ -1,21 +1,22 @@
 ﻿#pragma once
-#include <raylib.h>
-#include "collision.h"
+
+#include "entity.h"
+#include "physics.h"
 
 
-class Player
+namespace Game::Entities
 {
-public:
-    Player(const Vector2 position, const int width, const int height);
-    Texture2D sprite;
-    Vector2 position;
-    int width;
-    int height;
-
-    Polygon* polygon;
-    
-    void update();
-
-    void draw();
-    
-};
+    class Player : public Entity
+    {
+        Physics::Object* player_object;
+        Vector2 spawn_point;
+    public:
+        explicit Player(Vector2 position);
+        void reset_player();
+        void set_spawn_point(Vector2 spawn_point);
+        Physics::Object* get_player_object();
+        void update() override;
+        void draw() override;
+        void on_collision(cpArbiter* arb, cpSpace* space, Entity* entity) override;
+    };
+}
