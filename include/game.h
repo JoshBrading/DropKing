@@ -6,15 +6,13 @@
 #include "player.h"
 #include "timed_platform.h"
 #include "platform.h"
+#include "spikes.h"
+#include "key.h"
 
 namespace Game
 {
     namespace Entities
     {
-        namespace Items
-        {
-            class Key;
-        }
 
         class FinishBox;
     }
@@ -35,6 +33,7 @@ namespace Game
         std::vector<Entities::Obstacles::Platform*> platforms;
         std::vector<Entities::Obstacles::TimedPlatform*> timed_platforms;
         std::vector<Entities::Obstacles::Platform*> false_platforms;
+        std::vector<Entities::Obstacles::Spikes*> spikes;
         std::vector<Entities::Items::Gem*> gems;
         std::vector<Entities::Items::Key*> keys;
         std::vector<Physics::Object*> doors;

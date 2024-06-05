@@ -25,15 +25,16 @@ namespace Game::Entities::Items
     void Key::update()
     {
         Entity::update();
-        position.x += sin(GetTime()) * 10 * GetFrameTime();
-        position.y += cos(GetTime()) * 15 * GetFrameTime();
+        position.x += sin(GetTime()) * 5 * GetFrameTime();
+        position.y += cos(GetTime()) * 10 * GetFrameTime();
+        rotation += sin(GetTime())* 10 * GetFrameTime();
     }
 
     void Key::draw()
     {
         Entity::draw();
         if (!collected)
-            DrawTexture(key_texture, position.x - key_texture.width / 2, position.y - key_texture.height / 2, WHITE);
+            DrawTextureEx(key_texture,{ position.x - key_texture.width / 2, position.y - key_texture.height / 2}, rotation, 1, WHITE);
     }
 
     void post_collision(cpArbiter* arb, cpSpace* space, Key* key)

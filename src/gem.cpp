@@ -27,15 +27,16 @@ namespace Game::Entities::Items
     void Gem::update()
     {
         Entity::update();
-        position.x += sin(GetTime()) * 10 * GetFrameTime();
-        position.y += cos(GetTime()) * 15 * GetFrameTime();
+        position.x += sin(GetTime()) * 5 * GetFrameTime();
+        position.y += cos(GetTime()) * 10 * GetFrameTime();
+        rotation += cos(GetTime())* 10 * GetFrameTime();
     }
 
     void Gem::draw()
     {
         Entity::draw();
         if( !collected )
-            DrawTexture(gem_texture, position.x - gem_texture.width / 2, position.y - gem_texture.height / 2, WHITE);
+            DrawTextureEx(gem_texture, {position.x - gem_texture.width / 2, position.y - gem_texture.height / 2}, rotation, 1, WHITE);
     }
 
     void post_collision(cpArbiter* arb, cpSpace* space, Gem* gem)

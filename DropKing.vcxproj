@@ -106,6 +106,7 @@
       <AdditionalIncludeDirectories>C:\Users\maste\OneDrive\Desktop\Code\Games\DropKing\include;C:\Users\maste\OneDrive\Desktop\Code\Games\raylib\out\build\x64-Debug\raylib\include;</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
+    <ClCompile Include="src\spikes.cpp" />
     <ClCompile Include="src\timed_platform.cpp" />
     <ClCompile Include="src\transform.cpp" />
   </ItemGroup>
@@ -122,6 +123,7 @@
     <ClInclude Include="include\mem.h" />
     <ClInclude Include="include\menu.h" />
     <ClInclude Include="include\platform.h" />
+    <ClInclude Include="include\spikes.h" />
     <ClInclude Include="include\timed_platform.h" />
     <ClInclude Include="include\physics.h" />
     <ClInclude Include="include\player.h" />

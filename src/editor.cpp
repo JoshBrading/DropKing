@@ -9,6 +9,7 @@
 #include "gem.h"
 #include "key.h"
 #include "platform.h"
+#include "spikes.h"
 
 Editor::Editor(Camera2D* camera, Game::GameWorld* game)
 {
@@ -37,8 +38,10 @@ Editor::Editor(Camera2D* camera, Game::GameWorld* game)
     {
     }, nullptr);
     menu->add_label("Obstacles", font, 20, {5, 170});
-    menu->add_button("Create Spike", font, {10, 195}, 200, 20, [](Menu* menu, void* data)
+    menu->add_button("Create Spike", font, {10, 195}, 200, 20, [this](Menu* menu, void* data)
     {
+        this->state = SPIKE_PIT_WAIT_FOR_CLICK;
+        menu->close();
     }, nullptr);
     menu->add_button("Create False Platform", font, {10, 220}, 200, 20, [this](Menu* menu, void* data)
     {
@@ -116,9 +119,17 @@ void Editor::update()
     if( !active ) return;
     Vector2 mouse_screen_space = GetMousePosition();
     Vector2 mouse = GetScreenToWorld2D(mouse_screen_space, *camera);
-    mouse.x = (int)(mouse.x + (mouse.x >= 0 ? 12.5 : -12.5)) / 25 * 25;
-    mouse.y = (int)((mouse.y + 12.5) / 25) * 25;
-
+    if( IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))
+    {
+        mouse.x = (mouse.x + (mouse.x >= 0 ? 6.25 : -6.25)) / 12.5 * 12.5;
+        mouse.y = (mouse.y + 6.25) / 12.5 * 12.5;
+    }
+    else
+    {
+        mouse.x = ((int)(mouse.x + (mouse.x >= 0 ? 12.5 : -12.5)) / 25) * 25;
+        mouse.y = (int)((mouse.y + 12.5) / 25) * 25;
+    }
+    
     if( IsMouseButtonPressed(1) && (state == NONE || state == DEMO))
     {
         menu->set_base_offset(mouse_screen_space);
@@ -220,6 +231,24 @@ void Editor::update()
             level->player->reset_player();
             state = NONE;
         }
+        if( state == SPIKE_PIT_WAIT_FOR_CLICK )
+        {
+            selected_object = new EditObject();
+            selected_object->start = mouse;
+            state = SPIKE_PIT_WAIT_FOR_PLACEMENT;
+        }
+        if( state == SPIKE_PIT_WAIT_FOR_PLACEMENT )
+        {
+            if( !Vector2Equals(selected_object->start, mouse))
+            {
+                auto obj = new Game::Entities::Obstacles::Spikes(selected_object->start, mouse);
+                level->objects.push_back(obj->get_spikes());
+                Physics::add_object_to_physics(obj->get_spikes());
+                level->spikes.push_back(obj);
+                selected_object = nullptr;
+                state = NONE;
+            }
+        }
     }
 
     menu->update();
@@ -276,15 +305,29 @@ void Editor::draw() const
     {
         key->draw();
     }
+    for(auto& spike : level->spikes)
+    {
+        spike->draw();
+    }
     Vector2 mouse_screen_pos = GetMousePosition();
     Vector2 mouse = GetScreenToWorld2D(mouse_screen_pos, *camera);
-    mouse.x = ((int)(mouse.x + (mouse.x >= 0 ? 12.5 : -12.5)) / 25) * 25;
-    mouse.y = (int)((mouse.y + 12.5) / 25) * 25;
+    float grid_space = 25;
+    if( IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))
+    {
+        mouse.x = (mouse.x + (mouse.x >= 0 ? 6.25 : -6.25)) / 12.5 * 12.5;
+        mouse.y = (mouse.y + 6.25) / 12.5 * 12.5;
+        grid_space = 12.5;
+    }
+    else
+    {
+        mouse.x = ((int)(mouse.x + (mouse.x >= 0 ? 12.5 : -12.5)) / 25) * 25;
+        mouse.y = (int)((mouse.y + 12.5) / 25) * 25;
+    }
 
     
-    if( selected_object && state != FINISH_BOX_WAIT_FOR_PLACEMENT)
+    if( selected_object && state != FINISH_BOX_WAIT_FOR_PLACEMENT && state != SPIKE_PIT_WAIT_FOR_PLACEMENT)
         DrawLineEx(selected_object->start, mouse, 4, GREEN);
-    else if( selected_object && state == FINISH_BOX_WAIT_FOR_PLACEMENT)
+    else if( selected_object && (state == FINISH_BOX_WAIT_FOR_PLACEMENT || state == SPIKE_PIT_WAIT_FOR_PLACEMENT))
     {
         Rectangle rect = {selected_object->start.x, selected_object->start.y, mouse.x - selected_object->start.x, mouse.y - selected_object->start.y};
         DrawRectangleLinesEx(rect, 4, GREEN);
@@ -292,19 +335,17 @@ void Editor::draw() const
     if( state != DEMO)
     {
         // Edit grid
-        for( float i = -25; i < 10000; i += 25)
+        for( float i = -25; i < 10000; i += grid_space)
         {
-            DrawLineEx({-575, i}, {575, i}, 1, {255, 255, 255, 64});
+            DrawLineEx({-575, (float)i}, {575, (float)i}, 1, {255, 255, 255, 64});
         }
-        for( float i = -525; i <= 525; i += 25)
+        for( float i = -525; i <= 525; i += grid_space)
         {
-            DrawLineEx({i, -75}, {i, 10000}, 1, {255, 255, 255, 64});
+            DrawLineEx({(float)i, -75}, {(float)i, 10000}, 1, {255, 255, 255, 64});
         }
         
         if( state != NONE )
             DrawCircle(mouse.x, mouse.y, 5, GREEN);
-        if( state != SETTING_SPAWN)
-            DrawCircle(level->spawn_point.x, level->spawn_point.y, 5, YELLOW);
         
     }
     EndMode2D();
@@ -361,6 +402,18 @@ void Editor::draw() const
     if( state == KEY_WAIT_FOR_PLACEMENT )
     {
         text = "Click to place key";
+        text_length = MeasureText(text, 20);
+        DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
+    }
+    if( state == SPIKE_PIT_WAIT_FOR_CLICK )
+    {
+        text = "Click to set start point";
+        text_length = MeasureText(text, 20);
+        DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
+    }
+    if( state == SPIKE_PIT_WAIT_FOR_PLACEMENT )
+    {
+        text = "Click to set end point";
         text_length = MeasureText(text, 20);
         DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
     }

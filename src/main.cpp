@@ -187,7 +187,7 @@ int main(void)
         level_selector->update();
         //OBJECTS.back()->update();
         BeginDrawing();
-        ClearBackground(DARKGRAY);
+        ClearBackground({32, 32, 32, 255});
         //store.draw();
         //store.update();
         //debug_submenu.draw();

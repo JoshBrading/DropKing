@@ -35,7 +35,8 @@ namespace Physics
             GEM,
             KEY,
             PLAYER,
-            FINISH
+            FINISH,
+            SPIKES
         };
         
         Tag tag;

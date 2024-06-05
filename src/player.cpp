@@ -122,10 +122,8 @@ void Game::Entities::Player::update()
     position = Vector2{static_cast<float>(pos.x), static_cast<float>(pos.y)};
 
     rotation = cpBodyGetAngle(player_object->body);
-
-    // store new history 60 times a second, gettime() returns time in seconds so we cannot use just that
     
-    if( GetTime() - LAST_QUEUE_TIME > 1.0f / 120.0f)
+    if( GetTime() - LAST_QUEUE_TIME > 1.0f / 60.0f)
     {
         player_snapshot h;
         h.position = cpBodyGetPosition(player_object->body);
@@ -135,7 +133,7 @@ void Game::Entities::Player::update()
         HISTORY_QUEUE.push(h);
         LAST_QUEUE_TIME = GetTime();
     }
-    if( HISTORY_QUEUE.size() > 30)
+    if( HISTORY_QUEUE.size() > 60)
         HISTORY_QUEUE.pop();
 }
 
@@ -146,11 +144,17 @@ void Game::Entities::Player::draw()
     Rectangle rect = {position.x, position.y, player_object->size.x, player_object->size.y};
     DrawTexturePro(player_background, {0, 0, 48, 48}, rect, texture_offset, rotation * RAD2DEG, WHITE);
     DrawTexturePro(player_face, {0, 0, 48, 48}, rect, texture_offset, rotation * RAD2DEG, WHITE);
-    // Draw normal
+
     DrawLineEx({position.x, position.y}, {position.x + ground_normal.x * 32, position.y + ground_normal.y * 32}, 4, RED);
-    // Draw line perpendicular to normal
     DrawLineEx( {position.x, position.y}, {position.x + ground_normal.y * 32, position.y - ground_normal.x * 32}, 4, BLUE);
     DrawLineEx({position.x, position.y}, {position.x + ground_normal.x * 100 * jump_scale/ max_jump_scale, position.y + ground_normal.y * 100* jump_scale/ max_jump_scale}, 8, WHITE);
+
+    if( !HISTORY_QUEUE.empty())
+    {
+        auto h = HISTORY_QUEUE.front();
+        DrawCircleV({static_cast<float>(h.position.x), static_cast<float>(h.position.y)}, 4, RED);
+    }
+
 }
 
 void Game::Entities::Player::on_collision(cpArbiter* arb, cpSpace* space, Entity* entity)
@@ -158,21 +162,24 @@ void Game::Entities::Player::on_collision(cpArbiter* arb, cpSpace* space, Entity
     Entity::on_collision(arb, space, entity);
     if( entity )
     {
-        //if( entity->get_tag() == FINISH_BOX && !HISTORY_QUEUE.empty() && hearts > 0)
-        //{
-        //    cpBodySetPosition(player_object->body, HISTORY_QUEUE.front().position);
-        //    cpBodySetVelocity(player_object->body, HISTORY_QUEUE.front().velocity);
-        //    cpBodySetAngularVelocity(player_object->body, HISTORY_QUEUE.front().angular_velocity);
-        //    cpBodySetAngle(player_object->body, HISTORY_QUEUE.front().angle);
-        //
-        //    while( !HISTORY_QUEUE.empty() )
-        //        HISTORY_QUEUE.pop();
-        //    hearts--;
-        //}
-        //else
-        //{
-        //    reset_player();
-        //}
+        if( entity->get_tag() == SPIKE_PIT)
+        {
+            if( hearts > 0)
+            {
+                cpBodySetPosition(player_object->body, HISTORY_QUEUE.front().position);
+                cpBodySetVelocity(player_object->body, HISTORY_QUEUE.front().velocity);
+                cpBodySetAngularVelocity(player_object->body, HISTORY_QUEUE.front().angular_velocity);
+                cpBodySetAngle(player_object->body, HISTORY_QUEUE.front().angle);
+        
+                while( !HISTORY_QUEUE.empty() )
+                    HISTORY_QUEUE.pop();
+                hearts--;
+            }
+            else
+            {
+                reset_player();
+            }
+        }
     }
 }
 
