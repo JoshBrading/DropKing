@@ -8,6 +8,7 @@ namespace Game::Entities
     class FinishBox : public Entity
     {
         Vector2 position_end;
+        int required_keys = 0;
         Game::GameWorld* game = nullptr;
         Texture2D checkerboard;
         Physics::Object* finish_box;

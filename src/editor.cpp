@@ -63,11 +63,22 @@ Editor::Editor(Camera2D* camera, Game::GameWorld* game)
     }, nullptr);
     menu->add_button("Demo Level", font, {10, 350}, 200, 20, [this, game](Menu* menu, void* data)
     {
-        Game::PAUSE = false;
-        this->state = DEMO;
-        game->start();
+        if( state != DEMO )
+        {
+            Game::PAUSE = false;
+            state = DEMO;
+            level->camera_follows_player = true;
+            game->start();
+        }
+        else
+        {
+            Game::PAUSE = true;
+            state = NONE;
+            level->camera_follows_player = false;
+            level->player->reset_player();
+        }
         menu->close();
-    }, nullptr);
+    }, nullptr)->is_toggle = true;
     menu->add_button("Save Level", font, {10, 375}, 200, 20, [this](Menu* menu, void* data)
     {
         this->save_level_to_file();
@@ -89,6 +100,7 @@ void Editor::start()
     level->objects.push_back(Physics::create_wall({-500, 0}, 10000));
     level->objects.push_back(Physics::create_wall({500, 0}, 10000));
     level->player = new Game::Entities::Player({0, 0});
+    level->camera_follows_player = false;
     game->start_level(level);
 }
 
@@ -104,7 +116,10 @@ void Editor::update()
     if( !active ) return;
     Vector2 mouse_screen_space = GetMousePosition();
     Vector2 mouse = GetScreenToWorld2D(mouse_screen_space, *camera);
-    if( IsMouseButtonPressed(1) )
+    mouse.x = (int)(mouse.x + (mouse.x >= 0 ? 12.5 : -12.5)) / 25 * 25;
+    mouse.y = (int)((mouse.y + 12.5) / 25) * 25;
+
+    if( IsMouseButtonPressed(1) && (state == NONE || state == DEMO))
     {
         menu->set_base_offset(mouse_screen_space);
         menu->open();
@@ -114,6 +129,8 @@ void Editor::update()
         if( state == SETTING_SPAWN )
         {
             level->spawn_point = mouse;
+            level->player->set_spawn_point(level->spawn_point);
+            level->player->reset_player();
             state = NONE;
         }
         if( state == PLATFORM_WAIT_FOR_CLICK )
@@ -200,15 +217,9 @@ void Editor::update()
             level->objects.push_back(obj->get_key_object());
             Physics::add_object_to_physics(obj->get_key_object());
             level->keys.push_back(obj);
+            level->player->reset_player();
             state = NONE;
         }
-    }
-    
-
-    if(IsKeyPressed(KEY_R))
-    {
-        level->player->set_spawn_point(level->spawn_point);
-        level->player->reset_player();
     }
 
     menu->update();
@@ -216,23 +227,27 @@ void Editor::update()
         menu->close();
 }
 
-void Editor::update_fixed()
+void Editor::update_fixed() const
 {
     if( !active ) return;
     
     menu->update_fixed();
-    camera->offset.y += GetMouseWheelMove() * 50;
+    camera->target.y -= GetMouseWheelMove() * 100;
+    if( IsKeyDown(KEY_W))
+        camera->target.y -= 10;
+    if( IsKeyDown(KEY_A))
+        camera->target.x -= 10;
+    if( IsKeyDown(KEY_S))
+        camera->target.y += 10;
+    if( IsKeyDown(KEY_D))
+        camera->target.x += 10;
+    
     
 }
 
-void Editor::draw()
+void Editor::draw() const
 {
     if( !active ) return;
-    
-    if( menu )
-    {
-        menu->draw();
-    }
     
     BeginMode2D(*camera);
     if( level->finish_box )
@@ -263,6 +278,10 @@ void Editor::draw()
     }
     Vector2 mouse_screen_pos = GetMousePosition();
     Vector2 mouse = GetScreenToWorld2D(mouse_screen_pos, *camera);
+    mouse.x = ((int)(mouse.x + (mouse.x >= 0 ? 12.5 : -12.5)) / 25) * 25;
+    mouse.y = (int)((mouse.y + 12.5) / 25) * 25;
+
+    
     if( selected_object && state != FINISH_BOX_WAIT_FOR_PLACEMENT)
         DrawLineEx(selected_object->start, mouse, 4, GREEN);
     else if( selected_object && state == FINISH_BOX_WAIT_FOR_PLACEMENT)
@@ -272,71 +291,89 @@ void Editor::draw()
     }
     if( state != DEMO)
     {
+        // Edit grid
+        for( float i = -25; i < 10000; i += 25)
+        {
+            DrawLineEx({-575, i}, {575, i}, 1, {255, 255, 255, 64});
+        }
+        for( float i = -525; i <= 525; i += 25)
+        {
+            DrawLineEx({i, -75}, {i, 10000}, 1, {255, 255, 255, 64});
+        }
+        
+        if( state != NONE )
+            DrawCircle(mouse.x, mouse.y, 5, GREEN);
         if( state != SETTING_SPAWN)
             DrawCircle(level->spawn_point.x, level->spawn_point.y, 5, YELLOW);
-        else
-            DrawCircle(mouse.x, mouse.y, 5, GREEN);
+        
     }
     EndMode2D();
-
+    const char* text;
+    int text_length;
     if( state == PLATFORM_WAIT_FOR_CLICK )
     {
-        const char* text = "Click to set start point";
-        float text_length = MeasureText(text, 20);
+        text = "Click to set start point";
+        text_length = MeasureText(text, 20);
         DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
     }
     if( state == PLATFORM_WAIT_FOR_PLACEMENT )
     {
-        const char* text = "Click to set end point";
-        float text_length = MeasureText(text, 20);
+        text = "Click to set end point";
+        text_length = MeasureText(text, 20);
         DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
     }
     if( state == TIMED_PLATFORM_WAIT_FOR_CLICK )
     {
-        const char* text = "Click to set start point";
-        float text_length = MeasureText(text, 20);
+        text = "Click to set start point";
+        text_length = MeasureText(text, 20);
         DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
     }
     if( state == TIMED_PLATFORM_WAIT_FOR_PLACEMENT )
     {
-        const char* text = "Click to set end point";
-        float text_length = MeasureText(text, 20);
+        text = "Click to set end point";
+        text_length = MeasureText(text, 20);
         DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
     }
     if( state == SETTING_SPAWN )
     {
-        const char* text = "Click to set spawn point";
-        float text_length = MeasureText(text, 20);
+        text = "Click to set spawn point";
+        text_length = MeasureText(text, 20);
         DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
     }
     if( state == FINISH_BOX_WAIT_FOR_CLICK )
     {
-        const char* text = "Click to set start point";
-        float text_length = MeasureText(text, 20);
+        text = "Click to set start point";
+        text_length = MeasureText(text, 20);
         DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
     }
     if( state == FINISH_BOX_WAIT_FOR_PLACEMENT )
     {
-        const char* text = "Click to set end point";
-        float text_length = MeasureText(text, 20);
+        text = "Click to set end point";
+        text_length = MeasureText(text, 20);
         DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
     }
     if( state == GEM_WAIT_FOR_PLACEMENT )
     {
-        const char* text = "Click to place gem";
-        float text_length = MeasureText(text, 20);
+        text = "Click to place gem";
+        text_length = MeasureText(text, 20);
         DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
     }
     if( state == KEY_WAIT_FOR_PLACEMENT )
     {
-        const char* text = "Click to place key";
-        float text_length = MeasureText(text, 20);
+        text = "Click to place key";
+        text_length = MeasureText(text, 20);
         DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
+    }
+
+    
+    if( menu )
+    {
+        menu->draw();
     }
     
 }
 
-void Editor::save_level_to_file()
+void Editor::save_level_to_file() const
 {
     int level_count = game->get_levels().size();
     std::string file_name = "Level_" + std::to_string(level_count + 1);
@@ -411,31 +448,6 @@ void Editor::save_level_to_file()
         gem_json["position"]["y"] = gem->get_position().y;
         data["items"]["gems"].push_back(gem_json);
     }
-    
-    /*for(auto& obj : level->objects)
-    {
-        if( obj->type == Physics::Shapes::WALL )
-        {
-            nlohmann::json wall;
-            wall["start"]["x"] = obj->start.x;
-            wall["start"]["y"] = obj->start.y;
-            wall["end"]["x"] = obj->end.x;
-            wall["end"]["y"] = obj->end.y;
-            wall["height"] = obj->end.y;
-            data["map_objects"]["walls"].push_back(wall);
-        }
-        else if( obj->type == Physics::Shapes::PLATFORM )
-        {
-            nlohmann::json platform;
-            platform["start"]["x"] = obj->start.x;
-            platform["start"]["y"] = obj->start.y;
-            platform["end"]["x"] = obj->end.x;
-            platform["end"]["y"] = obj->end.y;
-            platform["length"] = obj->end.x;
-            platform["angle"] = 0;
-            data["map_objects"]["platforms"].push_back(platform);
-        }
-    }*/
     file << data.dump(4);
 
     game->add_level(level);

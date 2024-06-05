@@ -150,6 +150,7 @@ namespace Game
         if( level->finish_box )
             add_object_to_physics(level->finish_box->get_finish_box());
         level->player->reset_player();
+        camera->target = level->spawn_point;
         std::cout << "Level started \n";
         return true;
     }
@@ -221,8 +222,11 @@ namespace Game
                 start();
             }
             active_level->player->update();
-            camera->target.x += (active_level->player->get_position().x - camera->target.x) * 0.01;
-            camera->target.y = active_level->player->get_position().y;
+            if( active_level->camera_follows_player )
+            {
+                camera->target.x += (active_level->player->get_position().x - camera->target.x) * 0.01;
+                camera->target.y = active_level->player->get_position().y;
+            }
             for( auto& platform : active_level->platforms )
             {
                 platform->update();
@@ -234,6 +238,10 @@ namespace Game
             for( auto& gem : active_level->gems )
             {
                 gem->update();
+            }
+            for( auto& key : active_level->keys )
+            {
+                key->update();
             }
         }
     }

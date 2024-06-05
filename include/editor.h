@@ -38,8 +38,8 @@ public:
     void start();
     void cleanup();
     void update();
-    void update_fixed();
-    void draw();
+    void update_fixed() const;
+    void draw() const;
 private:
     Camera2D* camera = nullptr;
     Game::GameWorld* game = nullptr;
@@ -52,5 +52,5 @@ private:
     EditObject* selected_object = nullptr;
     std::vector<Physics::Object*> objects;
 
-    void save_level_to_file();
+    void save_level_to_file() const;
 };

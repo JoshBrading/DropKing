@@ -28,7 +28,7 @@ namespace Game
         int time_to_complete = 0;
         float end_height = 0;
         Vector2 spawn_point = {0, 0};
-
+        bool camera_follows_player = true;
         Entities::Player* player = nullptr;
         Entities::FinishBox* finish_box = nullptr;
         std::vector<Physics::Object*> objects;

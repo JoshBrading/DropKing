@@ -123,8 +123,8 @@ private:
     
     Image   *background;
 
-    void draw_button(const MenuButton* button, Vector2 offset = {0, 0});
-    void draw_dropdown(const MenuDropdown* dropdown);
+    void draw_button(const MenuButton* button, Vector2 offset = {0, 0}) const;
+    void draw_dropdown(const MenuDropdown* dropdown) const;
 
 
 };

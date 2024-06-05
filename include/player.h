@@ -8,9 +8,9 @@ namespace Game::Entities
 {
     class Player : public Entity
     {
-        
+        int hearts = 3;
         bool is_jumping = false;
-        cpVect ground_normal = cpv(0, 0);
+        Vector2 ground_normal = {0, 0};
         cpBody* ground = nullptr;
         float max_jump_height = 1000;
         float jump_scale = 0.0f;
@@ -24,9 +24,10 @@ namespace Game::Entities
     public:
         bool is_grounded = false;
         explicit Player(Vector2 position);
-        void reset_player();
+        void reset_player() const;
         void set_spawn_point(Vector2 spawn_point);
-        Physics::Object* get_player_object();
+        void set_ground_normal(Vector2 normal);
+        Physics::Object* get_player_object() const;
         void update() override;
         void draw() override;
         void on_collision(cpArbiter* arb, cpSpace* space, Entity* entity) override;

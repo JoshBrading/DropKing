@@ -33,8 +33,7 @@ namespace Game::Entities::Items
     {
         Entity::draw();
         if (!collected)
-            DrawCircle(position.x, position.y, 16, GOLD);
-            //DrawTexture(key_texture, position.x - key_texture.width / 2, position.y - key_texture.height / 2, WHITE);
+            DrawTexture(key_texture, position.x - key_texture.width / 2, position.y - key_texture.height / 2, WHITE);
     }
 
     void post_collision(cpArbiter* arb, cpSpace* space, Key* key)

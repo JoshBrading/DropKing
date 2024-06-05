@@ -4,8 +4,9 @@ namespace Game::Entities::Obstacles
 {
     Platform::Platform(Vector2 start, Vector2 end): Entity(start, 0)
     {
-        position_end = end;
-        platform = Physics::create_platform(start, end);
+        this->position = start;
+        this->position_end = end;   
+        platform = Physics::create_platform(position, position_end);
         Physics::ObjectDetails* details = new Physics::ObjectDetails();
         details->tag = Physics::ObjectDetails::GROUND;
         details->data = this;

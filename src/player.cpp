@@ -1,25 +1,41 @@
 ﻿#include "player.h"
 #include <raymath.h>
+#include <cmath>
+#include <queue>
+
+struct player_snapshot
+{
+    cpVect position;
+    cpFloat angular_velocity;
+    cpVect velocity;
+    cpFloat angle;
+};
+
+std::queue<player_snapshot> HISTORY_QUEUE;
+float LAST_QUEUE_TIME = 0.0f;
 
 void check_grounded(cpBody* body, cpArbiter* arb, void* player_entity)
 {
-    auto player = (Game::Entities::Player*)player_entity;
+    const auto player = static_cast<Game::Entities::Player*>(player_entity);
     if( !player ) return;
         
     cpShape *a, *b;
     cpArbiterGetShapes(arb, &a, &b);
     if( player->get_player_object()->shape != a && player->get_player_object()->shape != b) return;
 
-    Physics::ObjectDetails* details = (Physics::ObjectDetails*)cpShapeGetUserData(b);
+    const Physics::ObjectDetails* details = static_cast<Physics::ObjectDetails*>(cpShapeGetUserData(b));
     if( !details) return;
         
-    cpVect n = cpArbiterGetNormal(arb);
     cpArbiterSetRestitution(arb, 0.0f);
+
         
     if( details->tag == Physics::ObjectDetails::GROUND)
     {
         player->is_grounded = true;
-        // object->ground = b;
+        cpVect normal = cpSegmentShapeGetNormal(b);
+        if( normal.y > 0.0f )
+            normal = cpvneg(normal);
+        player->set_ground_normal({static_cast<float>(normal.x), static_cast<float>(normal.y)});
     }
         
 }
@@ -40,20 +56,25 @@ Game::Entities::Player::Player(Vector2 position): Entity(position, 0)
     cpShapeSetFriction(player_object->shape, 0.0f);
 }
 
-void Game::Entities::Player::reset_player()
+void Game::Entities::Player::reset_player() const
 {
-    cpBodySetPosition(player_object->body, cpv(spawn_point.x, spawn_point.y));
-    cpBodySetVelocity(player_object->body, cpvzero);
-    cpBodySetAngularVelocity(player_object->body, 0);
-    cpBodySetAngle(player_object->body, 0);
+   cpBodySetPosition(player_object->body, cpv(spawn_point.x, spawn_point.y));
+   cpBodySetVelocity(player_object->body, cpvzero);
+   cpBodySetAngularVelocity(player_object->body, 0);
+   cpBodySetAngle(player_object->body, 0);
 }
 
-void Game::Entities::Player::set_spawn_point(Vector2 spawn_point)
+void Game::Entities::Player::set_spawn_point(const Vector2 spawn_point)
 {
     this->spawn_point = spawn_point;
 }
 
-Physics::Object* Game::Entities::Player::get_player_object()
+void Game::Entities::Player::set_ground_normal(const Vector2 normal)
+{
+    this->ground_normal = {normal.x, normal.y};
+}
+
+Physics::Object* Game::Entities::Player::get_player_object() const
 {
     return player_object;
 }
@@ -61,10 +82,6 @@ Physics::Object* Game::Entities::Player::get_player_object()
 void Game::Entities::Player::update()
 {
     Entity::update();
-    //jump_scale = jump_scale + 1;
-    
-    DrawText(TextFormat("Jump: %f", jump_scale), 10, 30, 20, WHITE);
-    cpVect curr_vel = cpBodyGetVelocity(player_object->body);
     cpBodyEachArbiter(player_object->body, check_grounded, this);
     if( is_grounded )
     {
@@ -76,18 +93,50 @@ void Game::Entities::Player::update()
         }
         else if( IsKeyReleased(KEY_SPACE))
         {
-            cpVect jump_impulse = cpv(0, -(max_jump_height + max_jump_height * jump_scale));
-            cpBodyApplyImpulseAtWorldPoint(player_object->body, jump_impulse, cpBodyGetPosition(player_object->body));
-            cpBodySetAngularVelocity(player_object->body, 100 * PI / 180);
+            const cpVect curr_vel = cpBodyGetVelocity(player_object->body);
+            auto [angle_x, angle_y] = cpvforangle(std::atan2(ground_normal.y, ground_normal.x));
+            auto [jump_impulse_x, jump_impulse_y] = Vector2Scale({static_cast<float>(angle_x) / 2.0f, static_cast<float>(angle_y)}, (max_jump_height + max_jump_height * jump_scale));
+            cpBodyApplyImpulseAtWorldPoint(player_object->body, {jump_impulse_x, jump_impulse_y}, cpBodyGetPosition(player_object->body));
+            if( curr_vel.x > 0)
+                cpBodySetAngularVelocity(player_object->body, 100 * DEG2RAD);
+            else if( curr_vel.x < 0)
+                cpBodySetAngularVelocity(player_object->body, -100 * DEG2RAD);
             is_grounded = false;
             jump_scale = 0.0f;
         }
     }
+
+    cpVect vel = cpBodyGetVelocity(player_object->body);
+    if( IsKeyDown(KEY_A) && vel.x > 0)
+    {
+        vel.x -= 500 * GetFrameTime();
+        cpBodySetVelocity(player_object->body, vel);
+    }
+    else if( IsKeyDown(KEY_D) && vel.x < 0)
+    {
+        vel.x += 500 * GetFrameTime();
+        cpBodySetVelocity(player_object->body, vel);
+    }
     
     cpVect pos = cpBodyGetPosition(player_object->body);
-    position = Vector2{(float)pos.x, (float)pos.y};
+    position = Vector2{static_cast<float>(pos.x), static_cast<float>(pos.y)};
 
     rotation = cpBodyGetAngle(player_object->body);
+
+    // store new history 60 times a second, gettime() returns time in seconds so we cannot use just that
+    
+    if( GetTime() - LAST_QUEUE_TIME > 1.0f / 120.0f)
+    {
+        player_snapshot h;
+        h.position = cpBodyGetPosition(player_object->body);
+        h.angular_velocity = cpBodyGetAngularVelocity(player_object->body);
+        h.velocity = cpBodyGetVelocity(player_object->body);
+        h.angle = cpBodyGetAngle(player_object->body);
+        HISTORY_QUEUE.push(h);
+        LAST_QUEUE_TIME = GetTime();
+    }
+    if( HISTORY_QUEUE.size() > 30)
+        HISTORY_QUEUE.pop();
 }
 
 void Game::Entities::Player::draw()
@@ -97,6 +146,11 @@ void Game::Entities::Player::draw()
     Rectangle rect = {position.x, position.y, player_object->size.x, player_object->size.y};
     DrawTexturePro(player_background, {0, 0, 48, 48}, rect, texture_offset, rotation * RAD2DEG, WHITE);
     DrawTexturePro(player_face, {0, 0, 48, 48}, rect, texture_offset, rotation * RAD2DEG, WHITE);
+    // Draw normal
+    DrawLineEx({position.x, position.y}, {position.x + ground_normal.x * 32, position.y + ground_normal.y * 32}, 4, RED);
+    // Draw line perpendicular to normal
+    DrawLineEx( {position.x, position.y}, {position.x + ground_normal.y * 32, position.y - ground_normal.x * 32}, 4, BLUE);
+    DrawLineEx({position.x, position.y}, {position.x + ground_normal.x * 100 * jump_scale/ max_jump_scale, position.y + ground_normal.y * 100* jump_scale/ max_jump_scale}, 8, WHITE);
 }
 
 void Game::Entities::Player::on_collision(cpArbiter* arb, cpSpace* space, Entity* entity)
@@ -104,6 +158,21 @@ void Game::Entities::Player::on_collision(cpArbiter* arb, cpSpace* space, Entity
     Entity::on_collision(arb, space, entity);
     if( entity )
     {
-        
+        //if( entity->get_tag() == FINISH_BOX && !HISTORY_QUEUE.empty() && hearts > 0)
+        //{
+        //    cpBodySetPosition(player_object->body, HISTORY_QUEUE.front().position);
+        //    cpBodySetVelocity(player_object->body, HISTORY_QUEUE.front().velocity);
+        //    cpBodySetAngularVelocity(player_object->body, HISTORY_QUEUE.front().angular_velocity);
+        //    cpBodySetAngle(player_object->body, HISTORY_QUEUE.front().angle);
+        //
+        //    while( !HISTORY_QUEUE.empty() )
+        //        HISTORY_QUEUE.pop();
+        //    hearts--;
+        //}
+        //else
+        //{
+        //    reset_player();
+        //}
     }
 }
+
