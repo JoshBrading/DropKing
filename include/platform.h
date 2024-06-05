@@ -13,8 +13,10 @@ namespace Game::Entities::Obstacles
         
     public:
         explicit Platform(Vector2 start, Vector2 end);
+        Vector2 get_end();
+        Physics::Object* get_platform();
         void update() override;
         void draw() override;
-    
+        void on_collision(cpArbiter* arb, cpSpace* space, Entity* entity) override;
     };
 }

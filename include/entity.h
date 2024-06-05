@@ -37,6 +37,7 @@ enum EntityTag
     TIMED_PLATFORM,
     FALSE_PLATFORM,
     SPIKE_PIT,
+    FINISH_BOX,
     NONE
 };
 

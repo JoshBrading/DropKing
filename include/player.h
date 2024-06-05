@@ -8,9 +8,21 @@ namespace Game::Entities
 {
     class Player : public Entity
     {
+        
+        bool is_jumping = false;
+        cpVect ground_normal = cpv(0, 0);
+        cpBody* ground = nullptr;
+        float max_jump_height = 1000;
+        float jump_scale = 0.0f;
+        float max_jump_scale = 2.0f;
+        float jump_scale_increase = 2.0f;
         Physics::Object* player_object;
         Vector2 spawn_point;
+        Texture2D player_background;
+        Texture2D player_face;
+        Vector2 texture_offset = {0, 0};
     public:
+        bool is_grounded = false;
         explicit Player(Vector2 position);
         void reset_player();
         void set_spawn_point(Vector2 spawn_point);

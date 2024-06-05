@@ -32,7 +32,8 @@ namespace Physics
             NONE,
             GROUND,
             WALL,
-            PLAYER
+            PLAYER,
+            FINISH
         };
         
         Tag tag;
@@ -55,10 +56,10 @@ namespace Physics
         float jump_scale = 0.0f;
         float max_jump_scale = 2.0f;
         float jump_scale_increase = 2.0f;
-        void update();
     };
     void init();
     Object* create_square(Vector2 position, Vector2 size);
+    Object* create_static_square(Vector2 position, Vector2 size);
     Object* create_platform(Vector2 start, float length, float deg);
     Object* create_platform(Vector2 start, Vector2 end);
 

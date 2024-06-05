@@ -23,6 +23,7 @@
     <ClCompile Include="src\editor.cpp" />
     <ClCompile Include="src\entity.cpp" />
     <ClCompile Include="src\entity_manager.cpp" />
+    <ClCompile Include="src\finish_box.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\menu.cpp" />
@@ -111,6 +112,7 @@
     <ClInclude Include="include\editor.h" />
     <ClInclude Include="include\entity.h" />
     <ClInclude Include="include\entity_manager.h" />
+    <ClInclude Include="include\finish_box.h" />
     <ClInclude Include="include\game.h" />
     <ClInclude Include="include\item.h" />
     <ClInclude Include="include\mem.h" />

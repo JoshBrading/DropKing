@@ -14,6 +14,16 @@ namespace Game::Entities::Obstacles
         this->tag = TIMED_PLATFORM;
     }
 
+    Vector2 TimedPlatform::get_end()
+    {
+        return position_end;
+    }
+
+    int TimedPlatform::get_lifetime()
+    {
+        return lifetime;
+    }
+
     Physics::Object* TimedPlatform::get_platform()
     {
         return platform;
@@ -42,7 +52,9 @@ namespace Game::Entities::Obstacles
         if( alive )
         {
             unsigned char alpha = collision_time != -1? 256 - (GetTime() - collision_time) * 255 / lifetime: 255;
-            DrawLineEx(position, position_end, 2, {255, 255, 255, alpha });
+            if( collision_time + lifetime < GetTime() && collision_time != -1)
+                alpha = 0;
+            DrawLineEx(position, position_end, 4, {255, 255, 255, alpha });
         }
     }
 

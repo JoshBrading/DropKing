@@ -5,6 +5,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 
+#include "finish_box.h"
 #include "timed_platform.h"
 
 namespace Game
@@ -60,7 +61,10 @@ namespace Game
             Physics::Object* obj = Physics::create_wall({x, y}, height);
             level->objects.push_back(obj);
         }
-
+        Physics::Object* obj = Physics::create_wall({-500, 0}, 10000);
+        level->objects.push_back(obj);
+        Physics::Object* w2 = Physics::create_wall({500, 0}, 10000);
+        level->objects.push_back(w2);
         std::cout << "Loading platforms \n";
         for( auto& platform : data["map_objects"]["platforms"] )
         {
@@ -70,9 +74,30 @@ namespace Game
             float end_y = platform["end"]["y"];
             
             //Physics::Object* obj = Physics::create_platform({start_x, start_y}, {end_x, end_y});
-            Entities::Obstacles::TimedPlatform* ent_platform = new Entities::Obstacles::TimedPlatform({start_x, start_y}, {end_x, end_y}, 1);
+            auto ent_platform = new Entities::Obstacles::Platform({start_x, start_y}, {end_x, end_y});
             level->objects.push_back(ent_platform->get_platform());
             level->platforms.push_back(ent_platform);
+        }
+        for(auto& timed_platform : data["obstacles"]["timed_platforms"])
+        {
+            float start_x = timed_platform["start"]["x"];
+            float start_y = timed_platform["start"]["y"];
+            float end_x = timed_platform["end"]["x"];
+            float end_y = timed_platform["end"]["y"];
+            int lifetime = timed_platform["time"];
+            auto ent_platform = new Entities::Obstacles::TimedPlatform({start_x, start_y}, {end_x, end_y}, lifetime);
+            level->objects.push_back(ent_platform->get_platform());
+            level->timed_platforms.push_back(ent_platform);
+        }
+        for( auto& false_platform : data["obstacles"]["false_platforms"] )
+        {
+            float start_x = false_platform["start"]["x"];
+            float start_y = false_platform["start"]["y"];
+            float end_x = false_platform["end"]["x"];
+            float end_y = false_platform["end"]["y"];
+            
+            auto ent_platform = new Entities::Obstacles::Platform({start_x, start_y}, {end_x, end_y});
+            level->false_platforms.push_back(ent_platform);
         }
         std::cout << "Finished loading level \n";
         levels.push_back(level);
@@ -96,7 +121,7 @@ namespace Game
         {
             Physics::add_object_to_physics(obj);
         }
-        for(auto& platform : level->platforms)
+        for(auto& platform : level->timed_platforms)
         {
             platform->reset();
         }
@@ -117,6 +142,12 @@ namespace Game
             cpSpaceRemoveBody(Physics::Instances::SPACE, level->player->get_player_object()->body);
         if( cpSpaceContainsShape(Physics::Instances::SPACE, level->player->get_player_object()->shape))
             cpSpaceRemoveShape(Physics::Instances::SPACE, level->player->get_player_object()->shape);
+        if( level->finish_box )
+        {
+            if( cpSpaceContainsShape(Physics::Instances::SPACE, level->finish_box->get_finish_box()->shape) )
+                cpSpaceRemoveShape(Physics::Instances::SPACE, level->finish_box->get_finish_box()->shape);
+        }
+        
         for( auto& obj : level->objects )
         {
             if( cpSpaceContainsShape(Physics::Instances::SPACE, obj->shape))
@@ -173,6 +204,10 @@ namespace Game
             {
                 platform->update();
             }
+            for( auto& timed_platform : active_level->timed_platforms )
+            {
+                timed_platform->update();
+            }
         }
     }
 
@@ -188,6 +223,14 @@ namespace Game
             for( auto& platform : active_level->platforms )
             {
                 platform->draw();
+            }
+            for( auto& timed_platform : active_level->timed_platforms )
+            {
+                timed_platform->draw();
+            }
+            for( auto& false_platform : active_level->false_platforms )
+            {
+                false_platform->draw();
             }
             active_level->player->draw();
         }

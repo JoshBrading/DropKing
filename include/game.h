@@ -4,9 +4,15 @@
 #include "physics.h"
 #include "player.h"
 #include "timed_platform.h"
+#include "platform.h"
 
 namespace Game
 {
+    namespace Entities
+    {
+        class FinishBox;
+    }
+
     inline bool PAUSE = true;
     struct Level
     {
@@ -18,8 +24,11 @@ namespace Game
         Vector2 spawn_point = {0, 0};
 
         Entities::Player* player = nullptr;
+        Entities::FinishBox* finish_box = nullptr;
         std::vector<Physics::Object*> objects;
-        std::vector<Entities::Obstacles::TimedPlatform*> platforms;
+        std::vector<Entities::Obstacles::Platform*> platforms;
+        std::vector<Entities::Obstacles::TimedPlatform*> timed_platforms;
+        std::vector<Entities::Obstacles::Platform*> false_platforms;
         std::vector<Physics::Object*> gems;
         std::vector<Physics::Object*> keys;
         std::vector<Physics::Object*> doors;

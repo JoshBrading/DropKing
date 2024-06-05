@@ -10,10 +10,16 @@ class Editor
     enum State
     {
         NONE,
-        WAITING,
-        EDITING,
-        SETTING_SPAWN,
         DEMO,
+        SETTING_SPAWN,
+        FINISH_BOX_WAIT_FOR_CLICK,
+        FINISH_BOX_WAIT_FOR_PLACEMENT,
+        PLATFORM_WAIT_FOR_CLICK,
+        PLATFORM_WAIT_FOR_PLACEMENT,
+        TIMED_PLATFORM_WAIT_FOR_CLICK,
+        TIMED_PLATFORM_WAIT_FOR_PLACEMENT,
+        FALSE_PLATFORM_WAIT_FOR_CLICK,
+        FALSE_PLATFORM_WAIT_FOR_PLACEMENT,
     };
     struct EditObject
     {
