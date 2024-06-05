@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 
 #include "finish_box.h"
+#include "key.h"
 #include "timed_platform.h"
 
 namespace Game
@@ -49,8 +50,9 @@ namespace Game
         level->player = new Entities::Player(level->spawn_point);
         
         level->time_to_complete = data["time_to_complete"];
-        level->end_height = data["end_height"];
 
+        level->finish_box = new Entities::FinishBox({data["finish_box"]["start"]["x"], data["finish_box"]["start"]["y"]}, {data["finish_box"]["end"]["x"], data["finish_box"]["end"]["y"]}, this);
+        
         std::cout << "Loading walls \n";
         for( auto& wall : data["map_objects"]["walls"] )
         {
@@ -99,6 +101,15 @@ namespace Game
             auto ent_platform = new Entities::Obstacles::Platform({start_x, start_y}, {end_x, end_y});
             level->false_platforms.push_back(ent_platform);
         }
+
+        for( auto& gem : data["items"]["gems"] )
+        {
+            float x = gem["position"]["x"];
+            float y = gem["position"]["y"];
+            auto ent_gem = new Entities::Items::Gem({x, y});
+            level->objects.push_back(ent_gem->get_gem_object());
+            level->gems.push_back(ent_gem);
+        }
         std::cout << "Finished loading level \n";
         levels.push_back(level);
         return true;
@@ -125,7 +136,19 @@ namespace Game
         {
             platform->reset();
         }
+
+        for( auto& gem : level->gems )
+        {
+            gem->reset();
+        }
+
+        for( auto& key : level->keys )
+        {
+            key->reset();
+        }
         add_object_to_physics(level->player->get_player_object());
+        if( level->finish_box )
+            add_object_to_physics(level->finish_box->get_finish_box());
         level->player->reset_player();
         std::cout << "Level started \n";
         return true;
@@ -208,6 +231,10 @@ namespace Game
             {
                 timed_platform->update();
             }
+            for( auto& gem : active_level->gems )
+            {
+                gem->update();
+            }
         }
     }
 
@@ -232,7 +259,13 @@ namespace Game
             {
                 false_platform->draw();
             }
+            for( auto& gem : active_level->gems )
+            {
+                gem->draw();
+            }
             active_level->player->draw();
+            if( active_level->finish_box )
+                active_level->finish_box->draw();
         }
     }
 }

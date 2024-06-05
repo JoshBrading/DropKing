@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <vector>
 #include "entity.h"
+#include "gem.h"
 #include "physics.h"
 #include "player.h"
 #include "timed_platform.h"
@@ -10,6 +11,11 @@ namespace Game
 {
     namespace Entities
     {
+        namespace Items
+        {
+            class Key;
+        }
+
         class FinishBox;
     }
 
@@ -29,8 +35,8 @@ namespace Game
         std::vector<Entities::Obstacles::Platform*> platforms;
         std::vector<Entities::Obstacles::TimedPlatform*> timed_platforms;
         std::vector<Entities::Obstacles::Platform*> false_platforms;
-        std::vector<Physics::Object*> gems;
-        std::vector<Physics::Object*> keys;
+        std::vector<Entities::Items::Gem*> gems;
+        std::vector<Entities::Items::Key*> keys;
         std::vector<Physics::Object*> doors;
     };
     

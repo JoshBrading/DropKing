@@ -32,6 +32,8 @@ namespace Physics
             NONE,
             GROUND,
             WALL,
+            GEM,
+            KEY,
             PLAYER,
             FINISH
         };
@@ -58,6 +60,8 @@ namespace Physics
         float jump_scale_increase = 2.0f;
     };
     void init();
+    Object* create_circle(Vector2 position, float radius);
+    Object* create_static_circle(Vector2 position, float radius);
     Object* create_square(Vector2 position, Vector2 size);
     Object* create_static_square(Vector2 position, Vector2 size);
     Object* create_platform(Vector2 start, float length, float deg);

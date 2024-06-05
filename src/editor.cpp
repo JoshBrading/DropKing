@@ -6,6 +6,8 @@
 #include <nlohmann/json.hpp>
 
 #include "finish_box.h"
+#include "gem.h"
+#include "key.h"
 #include "platform.h"
 
 Editor::Editor(Camera2D* camera, Game::GameWorld* game)
@@ -21,11 +23,15 @@ Editor::Editor(Camera2D* camera, Game::GameWorld* game)
         menu->close();
     }, nullptr);
     menu->add_label("Items", font, 20, {5, 65});
-    menu->add_button("Create Gem", font, {10, 90}, 200, 20, [](Menu* menu, void* data)
+    menu->add_button("Create Gem", font, {10, 90}, 200, 20, [this](Menu* menu, void* data)
     {
+        this->state = GEM_WAIT_FOR_PLACEMENT;
+        menu->close();
     }, nullptr);
-    menu->add_button("Create Key", font, {10, 115}, 200, 20, [](Menu* menu, void* data)
+    menu->add_button("Create Key", font, {10, 115}, 200, 20, [this](Menu* menu, void* data)
     {
+        this->state = KEY_WAIT_FOR_PLACEMENT;
+        menu->close();
     }, nullptr);
     menu->add_button("Create Door", font, {10, 140}, 200, 20, [](Menu* menu, void* data)
     {
@@ -96,10 +102,9 @@ void Editor::cleanup()
 void Editor::update()
 {
     if( !active ) return;
-    
     Vector2 mouse_screen_space = GetMousePosition();
     Vector2 mouse = GetScreenToWorld2D(mouse_screen_space, *camera);
-    if( IsMouseButtonPressed(1))
+    if( IsMouseButtonPressed(1) )
     {
         menu->set_base_offset(mouse_screen_space);
         menu->open();
@@ -181,6 +186,22 @@ void Editor::update()
                 state = NONE;
             }
         }
+        if( state == GEM_WAIT_FOR_PLACEMENT )
+        {
+            auto obj = new Game::Entities::Items::Gem(mouse);
+            level->objects.push_back(obj->get_gem_object());
+            Physics::add_object_to_physics(obj->get_gem_object());
+            level->gems.push_back(obj);
+            state = NONE;
+        }
+        if( state == KEY_WAIT_FOR_PLACEMENT )
+        {
+            auto obj = new Game::Entities::Items::Key(mouse);
+            level->objects.push_back(obj->get_key_object());
+            Physics::add_object_to_physics(obj->get_key_object());
+            level->keys.push_back(obj);
+            state = NONE;
+        }
     }
     
 
@@ -189,7 +210,10 @@ void Editor::update()
         level->player->set_spawn_point(level->spawn_point);
         level->player->reset_player();
     }
-    
+
+    menu->update();
+    if( IsMouseButtonPressed(0))
+        menu->close();
 }
 
 void Editor::update_fixed()
@@ -204,6 +228,11 @@ void Editor::update_fixed()
 void Editor::draw()
 {
     if( !active ) return;
+    
+    if( menu )
+    {
+        menu->draw();
+    }
     
     BeginMode2D(*camera);
     if( level->finish_box )
@@ -223,6 +252,14 @@ void Editor::draw()
     for(auto& false_platform : level->false_platforms)
     {
         false_platform->draw();
+    }
+    for(auto& gem : level->gems)
+    {
+        gem->draw();
+    }
+    for(auto& key : level->keys)
+    {
+        key->draw();
     }
     Vector2 mouse_screen_pos = GetMousePosition();
     Vector2 mouse = GetScreenToWorld2D(mouse_screen_pos, *camera);
@@ -284,13 +321,19 @@ void Editor::draw()
         float text_length = MeasureText(text, 20);
         DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
     }
-    
-    
-    if( menu )
+    if( state == GEM_WAIT_FOR_PLACEMENT )
     {
-        menu->draw();
-        menu->update();
+        const char* text = "Click to place gem";
+        float text_length = MeasureText(text, 20);
+        DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
     }
+    if( state == KEY_WAIT_FOR_PLACEMENT )
+    {
+        const char* text = "Click to place key";
+        float text_length = MeasureText(text, 20);
+        DrawText(text, mouse_screen_pos.x - text_length / 2, mouse_screen_pos.y + 20, 20, SKYBLUE);
+    }
+    
 }
 
 void Editor::save_level_to_file()
@@ -310,7 +353,10 @@ void Editor::save_level_to_file()
     data["background"] = "background.png";
     data["spawn_point"]["x"] = level->spawn_point.x;
     data["spawn_point"]["y"] = level->spawn_point.y;
-    data["end_height"] = 1000;
+    data["finish_box"]["start"]["x"] = level->finish_box->get_position().x;
+    data["finish_box"]["start"]["y"] = level->finish_box->get_position().y;
+    data["finish_box"]["end"]["x"] = level->finish_box->get_end().x;
+    data["finish_box"]["end"]["y"] = level->finish_box->get_end().y;
     data["time_to_complete"] = 100;
     data["map_objects"]["walls"] = nlohmann::json::array();
     data["map_objects"]["platforms"] = nlohmann::json::array();
@@ -356,6 +402,14 @@ void Editor::save_level_to_file()
         platform_json["length"] = false_platform->get_end().x;
         platform_json["angle"] = 0;
         data["obstacles"]["false_platforms"].push_back(platform_json);
+    }
+
+    for( auto& gem : level->gems )
+    {
+        nlohmann::json gem_json;
+        gem_json["position"]["x"] = gem->get_position().x;
+        gem_json["position"]["y"] = gem->get_position().y;
+        data["items"]["gems"].push_back(gem_json);
     }
     
     /*for(auto& obj : level->objects)

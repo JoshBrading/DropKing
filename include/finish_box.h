@@ -13,6 +13,7 @@ namespace Game::Entities
         Physics::Object* finish_box;
     public:
         FinishBox(Vector2 start, Vector2 end, Game::GameWorld* game);
+        Vector2 get_end();
         Physics::Object* get_finish_box();
         void update() override;
         void draw() override;

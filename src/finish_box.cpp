@@ -18,6 +18,11 @@ namespace Game::Entities
         cpShapeSetUserData(finish_box->shape, details);
     }
 
+    Vector2 FinishBox::get_end()
+    {
+        return position_end;
+    }
+
     Physics::Object* FinishBox::get_finish_box()
     {
         return finish_box;
@@ -40,7 +45,7 @@ namespace Game::Entities
         Entity::on_collision(arb, space, entity);
         if( entity->get_tag() == PLAYER)
         {
-            Game::PAUSE = true;
+            cpArbiterIgnore(arb);
         }
     }
 }

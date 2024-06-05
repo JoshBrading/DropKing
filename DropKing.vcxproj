@@ -25,6 +25,8 @@
     <ClCompile Include="src\entity_manager.cpp" />
     <ClCompile Include="src\finish_box.cpp" />
     <ClCompile Include="src\game.cpp" />
+    <ClCompile Include="src\gem.cpp" />
+    <ClCompile Include="src\key.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\menu.cpp" />
     <ClCompile Include="src\physics.cpp" />
@@ -114,7 +116,9 @@
     <ClInclude Include="include\entity_manager.h" />
     <ClInclude Include="include\finish_box.h" />
     <ClInclude Include="include\game.h" />
+    <ClInclude Include="include\gem.h" />
     <ClInclude Include="include\item.h" />
+    <ClInclude Include="include\key.h" />
     <ClInclude Include="include\mem.h" />
     <ClInclude Include="include\menu.h" />
     <ClInclude Include="include\platform.h" />
