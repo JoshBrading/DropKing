@@ -23,7 +23,10 @@
     <ClCompile Include="src\editor.cpp" />
     <ClCompile Include="src\entity.cpp" />
     <ClCompile Include="src\entity_manager.cpp" />
+    <ClCompile Include="src\finish_box.cpp" />
     <ClCompile Include="src\game.cpp" />
+    <ClCompile Include="src\gem.cpp" />
+    <ClCompile Include="src\key.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\menu.cpp" />
     <ClCompile Include="src\physics.cpp" />
@@ -103,6 +106,7 @@
       <AdditionalIncludeDirectories>C:\Users\maste\OneDrive\Desktop\Code\Games\DropKing\include;C:\Users\maste\OneDrive\Desktop\Code\Games\raylib\out\build\x64-Debug\raylib\include;</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
+    <ClCompile Include="src\spikes.cpp" />
     <ClCompile Include="src\timed_platform.cpp" />
     <ClCompile Include="src\transform.cpp" />
   </ItemGroup>
@@ -111,11 +115,15 @@
     <ClInclude Include="include\editor.h" />
     <ClInclude Include="include\entity.h" />
     <ClInclude Include="include\entity_manager.h" />
+    <ClInclude Include="include\finish_box.h" />
     <ClInclude Include="include\game.h" />
+    <ClInclude Include="include\gem.h" />
     <ClInclude Include="include\item.h" />
+    <ClInclude Include="include\key.h" />
     <ClInclude Include="include\mem.h" />
     <ClInclude Include="include\menu.h" />
     <ClInclude Include="include\platform.h" />
+    <ClInclude Include="include\spikes.h" />
     <ClInclude Include="include\timed_platform.h" />
     <ClInclude Include="include\physics.h" />
     <ClInclude Include="include\player.h" />

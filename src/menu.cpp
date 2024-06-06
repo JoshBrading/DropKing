@@ -16,8 +16,7 @@ Menu::Menu()
 }
 
 Menu::~Menu()
-{
-}
+= default;
 
 void Menu::add_label(const std::string& text, const Font& font, const int size, const Vector2 position)
 {
@@ -196,7 +195,7 @@ void Menu::update_fixed()
 
 }
 
-void Menu::draw_button(const MenuButton *button, Vector2 offset)
+void Menu::draw_button(const MenuButton *button, Vector2 offset) const
 {
     if( !button ) return;
     if( button->is_selected )
@@ -204,7 +203,7 @@ void Menu::draw_button(const MenuButton *button, Vector2 offset)
         DrawTexture(button->background_selected, static_cast<int>(button->position.x + offset.x + base_offset.x), static_cast<int>(button->position.y + offset.y + base_offset.y), WHITE);
         if( button->is_toggle )
         {
-            DrawTexture(selector.icon, static_cast<int>(button->position.x + offset.x + button->width - 20 + base_offset.x), static_cast<int>(button->position.y + offset.y + 2 + base_offset.y), DARKBLUE);
+            DrawTexture(selector.icon, static_cast<int>(button->position.x + offset.x + button->width - 20 + base_offset.x), static_cast<int>(button->position.y + offset.y + 2 + base_offset.y), GREEN);
         }
     }else
     {
@@ -214,7 +213,7 @@ void Menu::draw_button(const MenuButton *button, Vector2 offset)
     DrawText(button->label.text.c_str(), static_cast<int>(label_offset.x + base_offset.x), static_cast<int>(label_offset.y + base_offset.y), 10, WHITE);
 }
 
-void Menu::draw_dropdown(const MenuDropdown *dropdown)
+void Menu::draw_dropdown(const MenuDropdown *dropdown) const
 {
     if(!dropdown) return;
     for(const auto& button : dropdown->buttons)
@@ -248,9 +247,10 @@ void Menu::draw()
 
 void Menu::set_background(Image* bg)
 {
+    //
 }
 
 Menu* Menu::get_previous_menu() const
 {
-    return nullptr;
+    return previous_menu;
 }

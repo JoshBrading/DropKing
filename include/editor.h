@@ -10,10 +10,20 @@ class Editor
     enum State
     {
         NONE,
-        WAITING,
-        EDITING,
-        SETTING_SPAWN,
         DEMO,
+        SETTING_SPAWN,
+        FINISH_BOX_WAIT_FOR_CLICK,
+        FINISH_BOX_WAIT_FOR_PLACEMENT,
+        PLATFORM_WAIT_FOR_CLICK,
+        PLATFORM_WAIT_FOR_PLACEMENT,
+        TIMED_PLATFORM_WAIT_FOR_CLICK,
+        TIMED_PLATFORM_WAIT_FOR_PLACEMENT,
+        FALSE_PLATFORM_WAIT_FOR_CLICK,
+        FALSE_PLATFORM_WAIT_FOR_PLACEMENT,
+        SPIKE_PIT_WAIT_FOR_CLICK,
+        SPIKE_PIT_WAIT_FOR_PLACEMENT,
+        GEM_WAIT_FOR_PLACEMENT,
+        KEY_WAIT_FOR_PLACEMENT,
     };
     struct EditObject
     {
@@ -28,8 +38,8 @@ public:
     void start();
     void cleanup();
     void update();
-    void update_fixed();
-    void draw();
+    void update_fixed() const;
+    void draw() const;
 private:
     Camera2D* camera = nullptr;
     Game::GameWorld* game = nullptr;
@@ -42,5 +52,5 @@ private:
     EditObject* selected_object = nullptr;
     std::vector<Physics::Object*> objects;
 
-    void save_level_to_file();
+    void save_level_to_file() const;
 };

@@ -18,7 +18,6 @@ void chipmunk_pre_solve_collision(cpArbiter* arb, cpSpace* space, cpDataPointer 
     (void)data;
     if (cpArbiterIsFirstContact(arb))
     {
-        // remove 2nd body from space
         cpShape *a, *b;
         cpArbiterGetShapes(arb, &a, &b);
         Physics::ObjectDetails* details_a = static_cast<Physics::ObjectDetails*>(cpShapeGetUserData(a));
@@ -44,7 +43,35 @@ void chipmunk_pre_solve_collision(cpArbiter* arb, cpSpace* space, cpDataPointer 
 
 namespace Physics
 {
-    Physics::Object* create_square(Vector2 position, Vector2 size)
+    Object* create_circle(Vector2 position, float radius)
+    {
+        Object* obj = new Object();
+        obj->type = Shapes::CIRCLE;
+        obj->size.x = radius;
+        obj->size.y = radius;
+        float mass = (obj->size.x * obj->size.y) * 0.001f;
+        obj->body = cpBodyNew(mass, cpMomentForCircle(mass, 0, obj->size.x, cpv(0, 0)));
+        obj->shape = cpCircleShapeNew(obj->body, obj->size.x, cpv(0, 0));
+        
+        cpBodySetPosition(obj->body, cpv(position.x, position.y));
+        return obj;
+    }
+
+    Object* create_static_circle(Vector2 position, float radius)
+    {
+        Object* obj = new Object();
+        obj->type = Shapes::CIRCLE;
+        obj->size.x = radius;
+        obj->size.y = radius;
+        obj->start = position;
+        obj->end = position;
+        obj->body = cpBodyNewStatic();
+        cpBodySetPosition(obj->body, cpv(position.x, position.y));
+        obj->shape = cpCircleShapeNew(obj->body, obj->size.x, cpv(0, 0));
+        return obj;
+    }
+    
+    Object* create_square(Vector2 position, Vector2 size)
     {
         Object* obj = new Object();
         obj->type = Shapes::BOX;
@@ -56,6 +83,20 @@ namespace Physics
         return obj;
     }
 
+    Object* create_static_square( Vector2 position, Vector2 size )
+    {
+        Object* obj = new Object();
+        obj->type = Shapes::BOX;
+        obj->size.x = size.x;
+        obj->size.y = size.y;
+        obj->start = position;
+        obj->end = {position.x + size.x, position.y + size.y};
+        obj->body = cpBodyNewStatic();
+        cpBodySetPosition(obj->body, {position.x, position.y});
+        obj->shape = cpBoxShapeNew(obj->body, obj->size.x, obj->size.y, 0.0);
+        return obj;
+    }
+
     Object* create_platform(Vector2 start, float length, float deg)
     {
         Object* obj = new Object();
@@ -63,9 +104,6 @@ namespace Physics
         cpBody* body = cpSpaceGetStaticBody(Instances::SPACE);
         Vector2 end = transform::rotate_point_about_target(start, {start.x, start.y - length}, deg);
         cpShape* shape = cpSegmentShapeNew(body, cpv(start.x, start.y), cpv(end.x, end.y), 0);
-        ObjectDetails* platform = new ObjectDetails();
-        platform->tag = ObjectDetails::GROUND;
-        cpShapeSetUserData(shape, platform);
         obj->body = body;
         obj->shape = shape;
         obj->start = start;
@@ -79,9 +117,6 @@ namespace Physics
         obj->type = Shapes::PLATFORM;
         cpBody* body = cpSpaceGetStaticBody(Instances::SPACE);
         cpShape* shape = cpSegmentShapeNew(body, cpv(start.x, start.y), cpv(end.x, end.y), 0);
-        ObjectDetails* platform = new ObjectDetails();
-        platform->tag = ObjectDetails::GROUND;
-        cpShapeSetUserData(shape, platform);
         obj->body = body;
         obj->shape = shape;
         obj->start = start;
@@ -109,16 +144,19 @@ namespace Physics
     void add_object_to_physics(Object* obj)
     {
         if( !obj ) return;
-        if( obj->type == Shapes::BOX )
-            cpSpaceAddBody(Instances::SPACE, obj->body);
         
-        cpSpaceAddShape(Instances::SPACE, obj->shape);
+        if( !cpSpaceContainsBody(Instances::SPACE, obj->body))
+            cpSpaceAddBody(Instances::SPACE, obj->body);
+
+        if( !cpSpaceContainsShape(Instances::SPACE, obj->shape))
+            cpSpaceAddShape(Instances::SPACE, obj->shape);
     }
 
     void remove_object_from_physics(Object* obj)
     {
         if(!obj) return;
-        if( obj->type == Shapes::BOX )
+        
+        if( obj->body != cpSpaceGetStaticBody(Instances::SPACE) )
             cpSpaceRemoveBody(Instances::SPACE, obj->body);
         
         cpSpaceRemoveShape(Instances::SPACE, obj->shape);
@@ -147,31 +185,6 @@ namespace Physics
         }
         
     }
-    void Object::update()
-    {
-        //jump_scale = jump_scale + 1;
-        DrawText(TextFormat("Jump: %f", jump_scale), 10, 30, 20, WHITE);
-        cpVect curr_vel = cpBodyGetVelocity(body);
-        cpBodyEachArbiter(body, check_grounded, this);
-        if( is_grounded )
-        {
-            
-            if( IsKeyDown(KEY_SPACE))
-            {
-                if( jump_scale < max_jump_scale)
-                    jump_scale += jump_scale_increase * GetFrameTime();
-            }
-            else if( IsKeyReleased(KEY_SPACE))
-            {
-                cpVect jump_impulse = cpv(0, -(max_jump_height + max_jump_height * jump_scale));
-                cpBodyApplyImpulseAtWorldPoint(body, jump_impulse, cpBodyGetPosition(body));
-                cpBodySetAngularVelocity(body, 100 * PI / 180);
-                is_grounded = false;
-                jump_scale = 0.0f;
-            }
-        }
-        
-    }
 
     void init()
     {
@@ -179,4 +192,5 @@ namespace Physics
         Instances::COLLISION_HANDLER = cpSpaceAddCollisionHandler(Instances::SPACE, 0, 0);
         Instances::COLLISION_HANDLER->preSolveFunc = reinterpret_cast<cpCollisionPreSolveFunc>(chipmunk_pre_solve_collision);
     }
+
 }
