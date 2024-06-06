@@ -1,6 +1,7 @@
 ﻿#include "player.h"
 #include <raymath.h>
 #include <cmath>
+#include <filesystem>
 #include <queue>
 
 struct player_snapshot
@@ -46,8 +47,13 @@ Game::Entities::Player::Player(Vector2 position): Entity(position, 0)
     this->spawn_point = position;
     this->player_object = Physics::create_square(position, {48, 48});
     this->tag = PLAYER;
-    this->player_background = LoadTexture("assets\\player\\base.png");
-    this->player_face = LoadTexture("assets\\player\\face.png");
+
+    const char* faces[] = {"default", "happy", "sad"};
+    const char* bases[] = {"default", "red", "blue"};
+    
+    this->player_face = LoadTexture(TextFormat("assets\\player\\%s_face.png", faces[rand() % 3]));
+    this->player_background = LoadTexture(TextFormat("assets\\player\\%s_base.png", bases[rand() % 3]));
+    
     this->texture_offset = Vector2{player_background.width / 2.0f, player_background.height / 2.0f};
     Physics::ObjectDetails* details = new Physics::ObjectDetails();
     details->data = this;
@@ -145,15 +151,9 @@ void Game::Entities::Player::draw()
     DrawTexturePro(player_background, {0, 0, 48, 48}, rect, texture_offset, rotation * RAD2DEG, WHITE);
     DrawTexturePro(player_face, {0, 0, 48, 48}, rect, texture_offset, rotation * RAD2DEG, WHITE);
 
-    DrawLineEx({position.x, position.y}, {position.x + ground_normal.x * 32, position.y + ground_normal.y * 32}, 4, RED);
-    DrawLineEx( {position.x, position.y}, {position.x + ground_normal.y * 32, position.y - ground_normal.x * 32}, 4, BLUE);
+    //DrawLineEx({position.x, position.y}, {position.x + ground_normal.x * 32, position.y + ground_normal.y * 32}, 4, RED);
+    //DrawLineEx( {position.x, position.y}, {position.x + ground_normal.y * 32, position.y - ground_normal.x * 32}, 4, BLUE);
     DrawLineEx({position.x, position.y}, {position.x + ground_normal.x * 100 * jump_scale/ max_jump_scale, position.y + ground_normal.y * 100* jump_scale/ max_jump_scale}, 8, WHITE);
-
-    if( !HISTORY_QUEUE.empty())
-    {
-        auto h = HISTORY_QUEUE.front();
-        DrawCircleV({static_cast<float>(h.position.x), static_cast<float>(h.position.y)}, 4, RED);
-    }
 
 }
 

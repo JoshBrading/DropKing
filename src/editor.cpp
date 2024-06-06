@@ -337,11 +337,11 @@ void Editor::draw() const
         // Edit grid
         for( float i = -25; i < 10000; i += grid_space)
         {
-            DrawLineEx({-575, (float)i}, {575, (float)i}, 1, {255, 255, 255, 64});
+            DrawLineEx({-575, i}, {575, i}, 1, {255, 255, 255, 32});
         }
         for( float i = -525; i <= 525; i += grid_space)
         {
-            DrawLineEx({(float)i, -75}, {(float)i, 10000}, 1, {255, 255, 255, 64});
+            DrawLineEx({i, -75}, {i, 10000}, 1, {255, 255, 255, 32});
         }
         
         if( state != NONE )

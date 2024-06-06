@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <vector>
+
 #include "entity.h"
 #include "physics.h"
 
@@ -20,6 +22,8 @@ namespace Game::Entities
         Vector2 spawn_point;
         Texture2D player_background;
         Texture2D player_face;
+        std::vector<Texture2D> player_faces;
+        std::vector<Texture2D> player_backgrounds;
         Vector2 texture_offset = {0, 0};
     public:
         bool is_grounded = false;

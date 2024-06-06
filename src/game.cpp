@@ -44,7 +44,7 @@ namespace Game
         nlohmann::json data = nlohmann::json::parse(file);
 
         //std::string name = data["name"];
-        level->name = data["name"].get<std::string>().c_str();
+        level->name = TextFormat("%s", data["name"]);
         level->spawn_point = {data["spawn_point"]["x"], data["spawn_point"]["y"]};
 
         level->player = new Entities::Player(level->spawn_point);
