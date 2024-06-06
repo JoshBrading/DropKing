@@ -40,12 +40,18 @@ namespace Game::Entities
         DrawTexturePro(checkerboard, {0, 0, rect.width, rect.height}, rect, {0, 0}, 0, {255, 255, 255, 128});
     }
 
+    void post_collision(cpSpace* space, void* key, Game::GameWorld* game)
+    {
+        game->open_level_complete_menu();
+    }
+
     void FinishBox::on_collision(cpArbiter* arb, cpSpace* space, Entity* entity)
     {
         Entity::on_collision(arb, space, entity);
         if( entity->get_tag() == PLAYER)
         {
             cpArbiterIgnore(arb);
+            cpSpaceAddPostStepCallback( space, reinterpret_cast<cpPostStepFunc>(post_collision), nullptr, game);
         }
     }
 }

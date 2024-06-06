@@ -153,8 +153,7 @@ void Game::Entities::Player::draw()
 
     //DrawLineEx({position.x, position.y}, {position.x + ground_normal.x * 32, position.y + ground_normal.y * 32}, 4, RED);
     //DrawLineEx( {position.x, position.y}, {position.x + ground_normal.y * 32, position.y - ground_normal.x * 32}, 4, BLUE);
-    DrawLineEx({position.x, position.y}, {position.x + ground_normal.x * 100 * jump_scale/ max_jump_scale, position.y + ground_normal.y * 100* jump_scale/ max_jump_scale}, 8, WHITE);
-
+    //DrawLineEx({position.x, position.y}, {position.x + ground_normal.x * 100 * jump_scale/ max_jump_scale, position.y + ground_normal.y * 100* jump_scale/ max_jump_scale}, 8, WHITE);
 }
 
 void Game::Entities::Player::on_collision(cpArbiter* arb, cpSpace* space, Entity* entity)

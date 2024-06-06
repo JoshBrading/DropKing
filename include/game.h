@@ -8,6 +8,7 @@
 #include "platform.h"
 #include "spikes.h"
 #include "key.h"
+#include "menu.h"
 
 namespace Game
 {
@@ -22,6 +23,8 @@ namespace Game
     {
         const char* name = "";
         const char* path = "";
+        Texture2D background;
+        int id = -1;
 
         int time_to_complete = 0;
         float end_height = 0;
@@ -49,12 +52,17 @@ namespace Game
         bool load_level(std::string level_name);
         bool start_level(Level* level);
         bool cleanup_level(Level* level);
+        void start_next_level();
+
         
         Level* get_level(const char* level_name);
         
         Level* get_previous_level();
-        Level* get_active_level();
-        Level* get_next_level();
+        Level* get_active_level() const;
+        Level* get_next_level() const;
+
+        void open_level_complete_menu();
+        void draw_lose_screen();
 
         void add_level(Level* level);
 
@@ -63,10 +71,12 @@ namespace Game
         std::vector<Level*> get_levels();
         
         void update();
+        void update_fixed();
         void draw();
 
     private:
         Camera2D* camera = nullptr;
+        Menu* level_complete_menu = nullptr;
         const char* level_path = "assets\\levels\\";
         int score = 0;
         bool is_paused = false;

@@ -494,12 +494,30 @@ void Editor::save_level_to_file() const
         data["obstacles"]["false_platforms"].push_back(platform_json);
     }
 
+    for( auto& spike : level->spikes )
+    {
+        nlohmann::json spike_json;
+        spike_json["start"]["x"] = spike->get_position().x;
+        spike_json["start"]["y"] = spike->get_position().y;
+        spike_json["end"]["x"] = spike->get_end().x;
+        spike_json["end"]["y"] = spike->get_end().y;
+        data["obstacles"]["spikes"].push_back(spike_json);
+    }
+
     for( auto& gem : level->gems )
     {
         nlohmann::json gem_json;
         gem_json["position"]["x"] = gem->get_position().x;
         gem_json["position"]["y"] = gem->get_position().y;
         data["items"]["gems"].push_back(gem_json);
+    }
+
+    for( auto& key : level->keys )
+    {
+        nlohmann::json key_json;
+        key_json["position"]["x"] = key->get_position().x;
+        key_json["position"]["y"] = key->get_position().y;
+        data["items"]["keys"].push_back(key_json);
     }
     file << data.dump(4);
 

@@ -21,7 +21,7 @@ int main(void)
 {
     // Init window
     //SetConfigFlags(FLAG_VSYNC_HINT); 
-    constexpr int screen_width = 1400;
+    constexpr int screen_width = 1920;
     constexpr int screen_height = 1000;
     InitWindow(screen_width, screen_height, "DropKing - [raylib]");
     SetExitKey(KEY_NULL);
@@ -63,7 +63,7 @@ int main(void)
             main_menu->close();
             level_selector->close();
             editor->cleanup();
-            Game::PAUSE = false;
+            Game::PAUSE = true;
         }, nullptr);
             level_count++;
         }
@@ -79,7 +79,7 @@ int main(void)
             main_menu->close();
             level_selector->close();
             editor->cleanup();
-            Game::PAUSE = false;
+            Game::PAUSE = true;
         }, nullptr);
     }
     main_menu->darken_background = true;
@@ -120,6 +120,7 @@ int main(void)
             editor->update_fixed();
             main_menu->update_fixed();
             level_selector->update_fixed();
+            game->update_fixed();
             fixed_update_accumulator -= fixed_update_interval;
         }
         

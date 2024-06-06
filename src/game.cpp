@@ -14,6 +14,25 @@ namespace Game
     GameWorld::GameWorld(Camera2D* camera)
     {
         this->camera = camera;
+        level_complete_menu = new Menu();
+        std::string label = "Level Complete!";
+        int font_size = 20;
+        float text_width = MeasureText(label.c_str(), font_size);
+        level_complete_menu->add_label(label, GetFontDefault(), font_size, {(GetScreenWidth() - text_width) / 2.0f , 400});
+        level_complete_menu->add_button("Replay", GetFontDefault(), {(GetScreenWidth() - 200) / 2.0f, 500}, 100, 10, [this](Menu*, void* data)
+        {
+            start();
+            level_complete_menu->close();
+        });
+        level_complete_menu->add_button("Next Level", GetFontDefault(), {(GetScreenWidth() - 200) / 2.0f, 525}, 100, 10, [this](Menu*, void* data)
+        {
+            start_next_level();
+            level_complete_menu->close();
+        });
+        level_complete_menu->add_button("Quit", GetFontDefault(), {(GetScreenWidth() - 200) / 2.0f, 550}, 100, 10, [this](Menu*, void* data)
+        {
+            exit(0);
+        });
     }
 
     void GameWorld::load_levels()
@@ -30,7 +49,6 @@ namespace Game
 
     bool GameWorld::load_level(std::string level_name)
     {
-        //load_levels_at_path(level_name);
         std::cout << "Loading level: " << level_name << '\n';
         Level* level = new Level();
         std::string path = level_path + level_name + ".json";
@@ -102,6 +120,17 @@ namespace Game
             level->false_platforms.push_back(ent_platform);
         }
 
+        for( auto& spike : data["obstacles"]["spikes"] )
+        {
+            float start_x = spike["start"]["x"];
+            float start_y = spike["start"]["y"];
+            float end_x = spike["end"]["x"];
+            float end_y = spike["end"]["y"];
+            auto ent_spike = new Entities::Obstacles::Spikes({start_x, start_y}, {end_x, end_y});
+            level->objects.push_back(ent_spike->get_spikes());
+            level->spikes.push_back(ent_spike);
+        }
+
         for( auto& gem : data["items"]["gems"] )
         {
             float x = gem["position"]["x"];
@@ -110,8 +139,22 @@ namespace Game
             level->objects.push_back(ent_gem->get_gem_object());
             level->gems.push_back(ent_gem);
         }
+
+        for( auto& key : data["items"]["keys"] )
+        {
+            float x = key["position"]["x"];
+            float y = key["position"]["y"];
+            auto ent_key = new Entities::Items::Key({x, y});
+            level->objects.push_back(ent_key->get_key_object());
+            level->keys.push_back(ent_key);
+        }
+
+        if( levels.empty() )
+            level->background = LoadTexture("assets\\backgrounds\\background.png");
+        else
+            level->background = levels[0]->background;
         std::cout << "Finished loading level \n";
-        levels.push_back(level);
+        add_level(level);
         return true;
     }
 
@@ -151,6 +194,7 @@ namespace Game
             add_object_to_physics(level->finish_box->get_finish_box());
         level->player->reset_player();
         camera->target = level->spawn_point;
+        Game::PAUSE = true;
         std::cout << "Level started \n";
         return true;
     }
@@ -182,15 +226,38 @@ namespace Game
         return true;
     }
 
-    Level* GameWorld::get_active_level()
+    void GameWorld::start_next_level()
+    {
+        start_level(get_next_level());
+    }
+
+    Level* GameWorld::get_active_level() const
     {
         if(!active_level)
             return nullptr;
         return active_level;
     }
 
+    Level* GameWorld::get_next_level() const
+    {
+            
+        if( active_level->id < levels.size() - 1)
+        {
+            if( active_level->id == -1)
+                return nullptr;
+            return levels[active_level->id + 1];
+        }
+        return nullptr;
+    }
+
+    void GameWorld::open_level_complete_menu()
+    {
+        level_complete_menu->open();
+    }
+
     void GameWorld::add_level(Level* level)
     {
+        level->id = levels.size();
         levels.push_back(level);
     }
 
@@ -216,6 +283,11 @@ namespace Game
     {
         if( active_level )
         {
+            if( Game::PAUSE && IsKeyPressed(KEY_SPACE) )
+            {
+                Game::PAUSE = false;
+            }
+                
             if( IsKeyPressed(KEY_R))
             {
                 active_level->player->reset_player();
@@ -244,36 +316,62 @@ namespace Game
                 key->update();
             }
         }
+        level_complete_menu->update();
     }
 
+    void GameWorld::update_fixed()
+    {
+        level_complete_menu->update_fixed();
+    }
+
+    unsigned char r = 255;
+    unsigned char g = 255;
+    unsigned char b = 255;
     void GameWorld::draw()
     {
+        
         if( active_level )
         {
+            DrawTexture(active_level->background, -1500, -500, {r, g, b, 255});
+            
             for( auto& obj : active_level->objects )
-            {
                 if( obj->type == Physics::Shapes::WALL)
                     DrawLineEx(obj->start, obj->end, 4, {255, 255, 255, 255});
-            }
             for( auto& platform : active_level->platforms )
-            {
                 platform->draw();
-            }
             for( auto& timed_platform : active_level->timed_platforms )
-            {
                 timed_platform->draw();
-            }
             for( auto& false_platform : active_level->false_platforms )
-            {
                 false_platform->draw();
-            }
+            for( auto& spike : active_level->spikes )
+                spike->draw();
             for( auto& gem : active_level->gems )
-            {
                 gem->draw();
-            }
+            for( auto& key : active_level->keys )
+                key->draw();
             active_level->player->draw();
             if( active_level->finish_box )
                 active_level->finish_box->draw();
         }
+        EndMode2D();
+
+        
+        level_complete_menu->draw();
+        if( active_level )
+        {
+            if(Game::PAUSE && active_level->id != -1)
+            {
+                DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), {0, 0, 0, 128});
+                const char* press_to_start = "Press space to start";
+                DrawText(press_to_start, GetScreenWidth() / 2 - MeasureText(press_to_start, 40) / 2, 400, 40, WHITE);
+            }
+            if( active_level->id != -1)
+            {
+                const char* score_text = TextFormat("Score: %i", score);
+                int text_width = MeasureText(score_text, 48);
+                DrawText(score_text, (GetScreenWidth() - text_width) / 2, 300, 48, WHITE);
+            }
+        }
+        BeginMode2D(*camera);
     }
 }
