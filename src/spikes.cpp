@@ -9,7 +9,7 @@ namespace Game::Entities::Obstacles
         this->tag = SPIKE_PIT;
         this->spikes_texture = LoadTexture("assets\\spikes.png");
         Vector2 offset_center = {start.x + (end.x - start.x) / 2, start.y + (end.y - start.y) / 2};
-        this->spikes = Physics::create_static_square(offset_center, {end.x - start.x, end.y - start.y});
+        this->spikes = Physics::create_static_square(offset_center, {end.x - start.x, end.y - start.y - 32});
         Physics::ObjectDetails* details = new Physics::ObjectDetails();
         details->tag = Physics::ObjectDetails::SPIKES;
         details->data = this;

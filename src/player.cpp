@@ -94,6 +94,7 @@ void Game::Entities::Player::reset_player()
     hearts = 3;
     score = 0;
     level_complete = false;
+    is_grounded = false;
 }
 
 void Game::Entities::Player::set_spawn_point(const Vector2 spawn_point)

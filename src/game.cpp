@@ -339,9 +339,9 @@ namespace Game
         for( int i = 0; i < hearts_max; i++)
         {
             if( i < hearts_remaining )
-                DrawTexture(heart_filled_texture, offset + (i * heart_width), 100, WHITE);
+                DrawTexture(heart_filled_texture, offset + (i * heart_width), 200, WHITE);
             else
-                DrawTexture(heart_empty_texture, offset + (i * heart_width), 100, WHITE);
+                DrawTexture(heart_empty_texture, offset + (i * heart_width), 200, WHITE);
         }
     }
 
@@ -393,7 +393,7 @@ namespace Game
                 draw_hearts(active_level->player->get_hearts(), 3);
                 const char* score_text = TextFormat("Score: %i", (int)active_level->player->get_score());
                 int text_width = MeasureText(score_text, 48);
-                DrawText(score_text, (GetScreenWidth() - text_width) / 2, 300, 48, WHITE);
+                DrawText(score_text, (GetScreenWidth() - text_width) / 2, 100, 48, YELLOW);
             }
 
         }
