@@ -39,10 +39,11 @@ namespace Game::Entities::Items
             DrawTextureEx(gem_texture, {position.x - gem_texture.width / 2, position.y - gem_texture.height / 2}, rotation, 1, WHITE);
     }
 
-    void post_collision(cpArbiter* arb, cpSpace* space, Gem* gem)
+    void remove_gem_from_space(cpSpace* space, void* key, void* gem)
     {
-        cpSpaceRemoveShape(space, gem->get_gem_object()->shape);
-        cpSpaceRemoveBody(space, gem->get_gem_object()->body);
+        auto gem_cast = static_cast<Gem*>(gem);
+        cpSpaceRemoveShape(space, gem_cast->get_gem_object()->shape);
+        cpSpaceRemoveBody(space, gem_cast->get_gem_object()->body);
     }
 
     void Gem::on_collision(cpArbiter* arb, cpSpace* space, Entity* entity)
@@ -52,8 +53,11 @@ namespace Game::Entities::Items
         {
             if( entity->get_tag() == PLAYER )
             {
-                cpArbiterIgnore(arb);
+                Player* player = static_cast<Player*>(entity);
+                player->set_score(player->get_score() * multiplier);
                 collected = true;
+                cpArbiterIgnore(arb);
+                cpSpaceAddPostStepCallback(space, remove_gem_from_space, nullptr, this);
             }
         }
     }

@@ -84,6 +84,8 @@ int main(void)
     }
     main_menu->darken_background = true;
     main_menu->add_label("DropKing", GetFontDefault(), 64, {100, 32});
+    main_menu->add_label("Programming & Design by Josh Brading", GetFontDefault(), 20, {screen_width - 450.0f, screen_height - 50.0f});
+    main_menu->add_label("Art by Daniel Giust", GetFontDefault(), 20, {screen_width - 250.0f, screen_height - 100.0f});
     main_menu->add_label("Main Menu", GetFontDefault(), 32, {100, 160});
     main_menu->add_button("Quick Start", GetFontDefault(), {100, 200}, 100, 10, [main_menu, game, level_selector](Menu*, void* data)
     {

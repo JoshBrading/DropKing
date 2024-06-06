@@ -4,12 +4,15 @@
 #include <filesystem>
 #include <queue>
 
+#include "game.h"
+
 struct player_snapshot
 {
     cpVect position;
     cpFloat angular_velocity;
     cpVect velocity;
     cpFloat angle;
+    int score;
 };
 
 std::queue<player_snapshot> HISTORY_QUEUE;
@@ -41,6 +44,26 @@ void check_grounded(cpBody* body, cpArbiter* arb, void* player_entity)
         
 }
 
+void Game::Entities::Player::take_snapshot() const
+{
+    player_snapshot snapshot;
+    snapshot.position = cpBodyGetPosition(player_object->body);
+    snapshot.angular_velocity = cpBodyGetAngularVelocity(player_object->body);
+    snapshot.velocity = cpBodyGetVelocity(player_object->body);
+    snapshot.angle = cpBodyGetAngle(player_object->body);
+    snapshot.score = score;
+    HISTORY_QUEUE.push(snapshot);
+}
+
+void Game::Entities::Player::calculate_score()
+{
+    cpVect velocity = cpBodyGetVelocity(player_object->body);
+    if( velocity.y > 0 )
+        score += (velocity.y + 20) * GetFrameTime();
+    else
+        score += 10 * GetFrameTime();
+}
+
 Game::Entities::Player::Player(Vector2 position): Entity(position, 0)
 {
     this->position = position;
@@ -48,8 +71,8 @@ Game::Entities::Player::Player(Vector2 position): Entity(position, 0)
     this->player_object = Physics::create_square(position, {48, 48});
     this->tag = PLAYER;
 
-    const char* faces[] = {"default", "happy", "sad"};
-    const char* bases[] = {"default", "red", "blue"};
+    const char* faces[] = {"default", "tough", "angry"};
+    const char* bases[] = {"default", "purple", "blue"};
     
     this->player_face = LoadTexture(TextFormat("assets\\player\\%s_face.png", faces[rand() % 3]));
     this->player_background = LoadTexture(TextFormat("assets\\player\\%s_base.png", bases[rand() % 3]));
@@ -62,12 +85,15 @@ Game::Entities::Player::Player(Vector2 position): Entity(position, 0)
     cpShapeSetFriction(player_object->shape, 0.0f);
 }
 
-void Game::Entities::Player::reset_player() const
+void Game::Entities::Player::reset_player()
 {
-   cpBodySetPosition(player_object->body, cpv(spawn_point.x, spawn_point.y));
-   cpBodySetVelocity(player_object->body, cpvzero);
-   cpBodySetAngularVelocity(player_object->body, 0);
-   cpBodySetAngle(player_object->body, 0);
+    cpBodySetPosition(player_object->body, cpv(spawn_point.x, spawn_point.y));
+    cpBodySetVelocity(player_object->body, cpvzero);
+    cpBodySetAngularVelocity(player_object->body, 0);
+    cpBodySetAngle(player_object->body, 0);
+    hearts = 3;
+    score = 0;
+    level_complete = false;
 }
 
 void Game::Entities::Player::set_spawn_point(const Vector2 spawn_point)
@@ -78,6 +104,21 @@ void Game::Entities::Player::set_spawn_point(const Vector2 spawn_point)
 void Game::Entities::Player::set_ground_normal(const Vector2 normal)
 {
     this->ground_normal = {normal.x, normal.y};
+}
+
+int Game::Entities::Player::get_hearts() const
+{
+    return hearts;
+}
+
+float Game::Entities::Player::get_score() const
+{
+    return score;
+}
+
+void Game::Entities::Player::set_score( float new_score )
+{
+    score = new_score;
 }
 
 Physics::Object* Game::Entities::Player::get_player_object() const
@@ -131,16 +172,14 @@ void Game::Entities::Player::update()
     
     if( GetTime() - LAST_QUEUE_TIME > 1.0f / 60.0f)
     {
-        player_snapshot h;
-        h.position = cpBodyGetPosition(player_object->body);
-        h.angular_velocity = cpBodyGetAngularVelocity(player_object->body);
-        h.velocity = cpBodyGetVelocity(player_object->body);
-        h.angle = cpBodyGetAngle(player_object->body);
-        HISTORY_QUEUE.push(h);
+        take_snapshot();
         LAST_QUEUE_TIME = GetTime();
     }
-    if( HISTORY_QUEUE.size() > 60)
+    if( HISTORY_QUEUE.size() > 90)
         HISTORY_QUEUE.pop();
+
+    if( !level_complete && !Game::PAUSE)
+        calculate_score();
 }
 
 void Game::Entities::Player::draw()
@@ -169,16 +208,14 @@ void Game::Entities::Player::on_collision(cpArbiter* arb, cpSpace* space, Entity
                 cpBodySetVelocity(player_object->body, HISTORY_QUEUE.front().velocity);
                 cpBodySetAngularVelocity(player_object->body, HISTORY_QUEUE.front().angular_velocity);
                 cpBodySetAngle(player_object->body, HISTORY_QUEUE.front().angle);
-        
+                score = HISTORY_QUEUE.front().score;
                 while( !HISTORY_QUEUE.empty() )
                     HISTORY_QUEUE.pop();
                 hearts--;
             }
-            else
-            {
-                reset_player();
-            }
         }
+        if( entity->get_tag() == FINISH_BOX )
+            level_complete = true;
     }
 }
 

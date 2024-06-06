@@ -9,6 +9,7 @@ namespace Game::Entities::Items
         bool collected = false;
         Texture2D key_texture;
         Physics::Object* key_object;
+        int multiplier = 3;
     public:
         explicit Key(Vector2 position);
         Physics::Object* get_key_object();

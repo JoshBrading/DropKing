@@ -33,6 +33,9 @@ namespace Game
         {
             exit(0);
         });
+
+        heart_filled_texture = LoadTexture("assets\\gui\\heart_filled.png");
+        heart_empty_texture = LoadTexture("assets\\gui\\heart_empty.png");
     }
 
     void GameWorld::load_levels()
@@ -283,6 +286,11 @@ namespace Game
     {
         if( active_level )
         {
+            if( active_level->player->get_hearts() <= 0 )
+            {
+                Game::PAUSE = true;
+                start();
+            }
             if( Game::PAUSE && IsKeyPressed(KEY_SPACE) )
             {
                 Game::PAUSE = false;
@@ -324,6 +332,19 @@ namespace Game
         level_complete_menu->update_fixed();
     }
 
+    void GameWorld::draw_hearts(int hearts_remaining, int hearts_max)
+    {
+        int heart_width = 60;
+        int offset = (GetScreenWidth() - hearts_max * heart_width) / 2;
+        for( int i = 0; i < hearts_max; i++)
+        {
+            if( i < hearts_remaining )
+                DrawTexture(heart_filled_texture, offset + (i * heart_width), 100, WHITE);
+            else
+                DrawTexture(heart_empty_texture, offset + (i * heart_width), 100, WHITE);
+        }
+    }
+
     unsigned char r = 255;
     unsigned char g = 255;
     unsigned char b = 255;
@@ -332,6 +353,8 @@ namespace Game
         
         if( active_level )
         {
+            if( active_level->background.id == 0)
+                active_level->background = levels[0]->background;
             DrawTexture(active_level->background, -1500, -500, {r, g, b, 255});
             
             for( auto& obj : active_level->objects )
@@ -367,10 +390,12 @@ namespace Game
             }
             if( active_level->id != -1)
             {
-                const char* score_text = TextFormat("Score: %i", score);
+                draw_hearts(active_level->player->get_hearts(), 3);
+                const char* score_text = TextFormat("Score: %i", (int)active_level->player->get_score());
                 int text_width = MeasureText(score_text, 48);
                 DrawText(score_text, (GetScreenWidth() - text_width) / 2, 300, 48, WHITE);
             }
+
         }
         BeginMode2D(*camera);
     }

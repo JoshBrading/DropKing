@@ -19,6 +19,7 @@ namespace Game
     }
 
     inline bool PAUSE = true;
+    
     struct Level
     {
         const char* name = "";
@@ -82,6 +83,9 @@ namespace Game
         bool is_paused = false;
         std::vector<Level*> levels;
         Level* active_level = nullptr;
-        
+        Texture2D heart_filled_texture;
+        Texture2D heart_empty_texture;
+
+        void draw_hearts(int hearts_remaining, int hearts_max);
     };
 }

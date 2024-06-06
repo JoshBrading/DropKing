@@ -9,6 +9,7 @@ namespace Game::Entities::Items
         bool collected = false;
         Texture2D gem_texture;
         Physics::Object* gem_object;
+        int multiplier = 2;
     public:
         explicit Gem(Vector2 position);
         Physics::Object* get_gem_object();

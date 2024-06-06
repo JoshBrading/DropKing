@@ -1,5 +1,7 @@
 ﻿#include "key.h"
 
+#include "player.h"
+
 namespace Game::Entities::Items
 {
     Key::Key(Vector2 position) : Entity(position, 0)
@@ -37,21 +39,25 @@ namespace Game::Entities::Items
             DrawTextureEx(key_texture,{ position.x - key_texture.width / 2, position.y - key_texture.height / 2}, rotation, 1, WHITE);
     }
 
-    void post_collision(cpArbiter* arb, cpSpace* space, Key* key)
+    void remove_key_from_space(cpSpace* space, void* _, void* key)
     {
-        cpSpaceRemoveShape(space, key->get_key_object()->shape);
-        cpSpaceRemoveBody(space, key->get_key_object()->body);
+        auto key_cast = static_cast<Key*>(key);
+        cpSpaceRemoveShape(space, key_cast->get_key_object()->shape);
+        cpSpaceRemoveBody(space, key_cast->get_key_object()->body);
     }
 
     void Key::on_collision(cpArbiter* arb, cpSpace* space, Entity* entity)
     {
         Entity::on_collision(arb, space, entity);
-        if (entity)
+        if( entity )
         {
-            if (entity->get_tag() == PLAYER)
+            if( entity->get_tag() == PLAYER )
             {
-                cpArbiterIgnore(arb);
+                Player* player = static_cast<Player*>(entity);
+                player->set_score(player->get_score() * multiplier);
                 collected = true;
+                cpArbiterIgnore(arb);
+                cpSpaceAddPostStepCallback(space, remove_key_from_space, nullptr, this);
             }
         }
     }
